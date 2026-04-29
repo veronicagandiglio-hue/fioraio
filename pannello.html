@@ -84,13 +84,6 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;ba
 .tv{font-size:12px;font-weight:700;color:var(--text-key)}
 .tv.on{color:var(--accent)}
 
-/* COLOR */
-.cw{display:flex;align-items:center;gap:8px}
-.cpicker{width:40px;height:36px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;background:#fff}
-.chex{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:'Menlo','Monaco',monospace;color:var(--text-primary);background:#fff;outline:none}
-.chex:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.15)}
-.cprev{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);flex-shrink:0}
-
 /* IMG PATH */
 .iw{display:flex;gap:6px;align-items:center}
 .ithumb{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0}
@@ -404,6 +397,58 @@ async function ghPut(jsonObj) {
 }
 
 // ════════════════════════════════════════════════════════════
+// GITHUB IMAGE UPLOAD
+// ════════════════════════════════════════════════════════════
+async function uploadToGitHub(event, key) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById(`upload_status_${key}`);
+  statusEl.style.display = 'block';
+  statusEl.textContent = '⏳ Compressione e caricamento...';
+
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const base64Content = ev.target.result.split(',')[1];
+    const ext = file.name.split('.').pop().toLowerCase();
+    const safeName = key + '_' + Date.now() + '.' + ext;
+    const filePath = `assets/${safeName}`; 
+    const apiUrl = `${GH_BASE}/repos/${LS.owner}/${LS.repo}/contents/${filePath}`;
+
+    try {
+      const body = {
+        message: `Upload immagine: ${key}`,
+        content: base64Content
+      };
+
+      const res = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: ghHeaders(),
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) throw new Error('Errore API GitHub');
+
+      setField(key, filePath);
+      
+      document.getElementById(`f_${key}`).value = filePath;
+      updThumb(key);
+      statusEl.textContent = '✅ Immagine caricata con successo!';
+      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+
+    } catch (err) {
+      statusEl.textContent = '❌ Errore nel caricamento. Riprova.';
+      statusEl.style.color = 'var(--error)';
+      console.error(err);
+    }
+  };
+  
+  reader.readAsDataURL(file);
+}
+
+
+
+// ════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════
 async function init() {
@@ -572,9 +617,9 @@ const SECTIONS = [
 
 const LMAP = {
   sito_in_bozza_watermark:'Sito in bozza (watermark)',crediti_ompage_footer:'Mostra crediti Ompage',
+  tema_tipografico:'Stile Tipografico',tema_palette:'Palette Colori Sito',
   seo_titolo:'Titolo pagina (SEO)',seo_descrizione:'Descrizione pagina (SEO)',og_immagine:'Immagine social (OG)',
   schema_nome:'Nome attività',schema_indirizzo:'Indirizzo',schema_telefono:'Telefono',schema_orari:'Orari apertura',
-  colore_accent:'Colore principale',colore_sfondo:'Colore sfondo',colore_testo:'Colore testo',colore_superficie:'Colore superficie',
   navbar_logo_tipo:'Tipo logo navbar',navbar_logo_testo:'Testo logo',navbar_logo_immagine:'Immagine logo',
   navbar_voce_chi_siamo:'Menu — Chi Siamo',navbar_voce_servizi:'Menu — Servizi',navbar_voce_galleria:'Menu — Galleria',
   navbar_voce_recensioni:'Menu — Recensioni',navbar_voce_faq:'Menu — FAQ',navbar_voce_contatti:'Menu — Contatti',
@@ -617,6 +662,8 @@ function lbl(key){
 function uc(s){return s.replace(/\b\w/g,c=>c.toUpperCase())}
 
 const SELOPTS={
+  tema_tipografico:['LUSSO_SERIF','MODERNO_TECH','CLASSICO'],
+  tema_palette:['CHIARO_MINIMALE','DARK_ELEGANTE','NATURA_PASTELLO','ROMANTICO'],
   hero_layout:['CON_FOTO_SFONDO','SENZA_FOTO'],
   chi_siamo_layout:['FOTO_E_TESTO','TRE_PASSI','SOLO_TESTO'],
   servizi_layout:['GRIGLIA','LISTA'],
@@ -627,22 +674,20 @@ const SELOPTS={
   popup_cta_tipo:['WHATSAPP','TELEFONO','URL'],
 };
 
-// imgpath PRIMA di tutto — evita che fixUrlsTels tocchi i path immagine
 function ftype(key){
   if(key.includes('_foto')||key.includes('_placeholder')||key.includes('_sfondo'))return'imgpath';
+  if(SELOPTS[key]||key.startsWith('tema_'))return'select';
   const v=CFG[key];
   if(v==='SI'||v==='NO'||key.endsWith('_attivo')||key.endsWith('_attiva')||key.endsWith('_attivi'))return'toggle';
-  if(key.includes('colore_'))return'color';
   if(['_testo','_descrizione','_risposta','_sottotitolo'].some(t=>key.includes(t)))return'textarea';
   if(key.includes('_url')||key.includes('_mappa')||key.includes('_instagram')||key.includes('_facebook')||key==='og_immagine')return'url';
   if(key.includes('_telefono')||key.includes('_whatsapp')||key.includes('_contatto'))return'tel';
   if(key.includes('_scadenza'))return'date';
-  if(SELOPTS[key])return'select';
   return'text';
 }
 
 function secOf(key){
-  if(['sito_in_bozza_watermark','crediti_ompage_footer'].includes(key)||key.startsWith('colore_'))return'impostazioni';
+  if(key.startsWith('tema_')||['sito_in_bozza_watermark','crediti_ompage_footer'].includes(key))return'impostazioni';
   if(key.startsWith('seo_')||key.startsWith('og_')||key.startsWith('schema_'))return'seo';
   if(key.startsWith('navbar_'))return'navbar';
   if(key.startsWith('barra_')||key.startsWith('popup_'))return'promozioni';
@@ -674,14 +719,7 @@ function rf(key,val){
   }
 
   let inp='';
-  if(t==='color'){
-    const c=val||'#000000';
-    inp=`<div class="cw">
-      <input type="color" class="cpicker" id="cp_${key}" value="${h(c)}" oninput="syncCp('${key}')">
-      <input type="text" class="chex" id="${id}" value="${h(c)}" data-key="${key}" maxlength="9" oninput="syncCh('${key}')">
-      <div class="cprev" id="cprev_${key}" style="background:${h(c)}"></div>
-    </div>`;
-  } else if(t==='select'){
+  if(t==='select'){
     const opts=SELOPTS[key].map(o=>`<option value="${o}"${val===o?' selected':''}>${o.replace(/_/g,' ')}</option>`).join('');
     inp=`<select class="fsel" id="${id}" data-key="${key}" onchange="setField('${key}',this.value)">${opts}</select>`;
   } else if(t==='textarea'){
@@ -690,7 +728,9 @@ function rf(key,val){
       oninput="setField('${key}',this.value);ar(this)${isSeo?`;updateCC('${key}')`:''}">
 ${h(val)}</textarea>${isSeo?`<div class="char-count${val.length>155?' over':''}" id="cc_${key}">${val.length}/155</div>`:''}`;
   } else if(t==='url'){
-    inp=`<input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" placeholder="https://..." oninput="setField('${key}',this.value)">`;
+    inp=`
+      <input type="url" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" placeholder="https://www.esempio.it/..." oninput="setField('${key}',this.value)">
+      <div class="dr">Inserisci l'indirizzo web completo (deve iniziare con https://)</div>`;
   } else if(t==='tel'){
     inp=`<input type="tel" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" placeholder="+39 333 1234567" oninput="setField('${key}',this.value)">`;
   } else if(t==='date'){
@@ -698,14 +738,21 @@ ${h(val)}</textarea>${isSeo?`<div class="char-count${val.length>155?' over':''}"
     <div class="dr" id="dr_${key}">${val?fmtDate(val):''}</div>`;
   } else if(t==='imgpath'){
     const hasThumb=val&&val.trim()!=='';
-    inp=`<div class="iw">
-      <img src="${ha(val)}" class="ithumb" id="ithumb_${key}" ${hasThumb?'':'style="display:none"'}
-        onerror="this.style.display='none';document.getElementById('iph_${key}').style.display='flex'">
-      <div class="ipholder" id="iph_${key}" ${hasThumb?'style="display:none"':''}>📷</div>
-      <input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}"
-        placeholder="nome-file.jpg" oninput="setField('${key}',this.value);updThumb('${key}')">
-      <button class="btn btn-ghost btn-sm" onclick="clrImg('${key}')" title="Svuota" style="flex-shrink:0">✕</button>
-    </div>`;
+    inp=`
+      <div class="iw">
+        <img src="${ha(val)}" class="ithumb" id="ithumb_${key}" ${hasThumb?'':'style="display:none"'} onerror="this.style.display='none';document.getElementById('iph_${key}').style.display='flex'">
+        <div class="ipholder" id="iph_${key}" ${hasThumb?'style="display:none"':''}>📷</div>
+        
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+           <input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" placeholder="nome-file.jpg (o URL esterno)" oninput="setField('${key}',this.value);updThumb('${key}')" style="font-size:12px; padding:6px; color:var(--text-secondary);" readonly>
+           <input type="file" id="file_${key}" accept="image/jpeg, image/png, image/webp" style="display:none" onchange="uploadToGitHub(event, '${key}')">
+           <div style="display:flex; gap:8px;">
+             <button class="btn btn-outline btn-sm" onclick="document.getElementById('file_${key}').click()">Carica Immagine</button>
+             <button class="btn btn-ghost btn-sm" onclick="clrImg('${key}')" title="Svuota immagine">✕ Rimuovi</button>
+           </div>
+        </div>
+      </div>
+      <div class="dr" id="upload_status_${key}" style="color:var(--accent); display:none;">⏳ Caricamento in corso... attendi.</div>`;
   } else {
     inp=`<input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" oninput="setField('${key}',this.value)">`;
   }
@@ -735,11 +782,11 @@ function makeCard(cardId,toggleKey,name,body){
 }
 
 function buildImpostazioni(keys){
-  const colors=keys.filter(k=>k.startsWith('colore_'));
-  const rest=keys.filter(k=>!k.startsWith('colore_'));
+  const temi=keys.filter(k=>k.startsWith('tema_'));
+  const rest=keys.filter(k=>!k.startsWith('tema_'));
   return sHdr('⚙️','Impostazioni','Configurazioni generali')
     +rest.map(k=>rf(k,CFG[k])).join('')
-    +(colors.length?gbox('🎨 Colori del tema',colors.map(k=>rf(k,CFG[k])).join('')):'');
+    +(temi.length?gbox('🎨 Stile Grafico',temi.map(k=>rf(k,CFG[k])).join('')):'');
 }
 function buildSeo(keys){
   const schema=keys.filter(k=>k.startsWith('schema_'));
@@ -913,16 +960,6 @@ function togField(key){
   const inp=document.getElementById('f_'+key); if(inp)inp.value=v;
 }
 
-function syncCp(key){
-  const cp=document.getElementById('cp_'+key),ch=document.getElementById('f_'+key),pv=document.getElementById('cprev_'+key);
-  if(!cp||!ch)return; ch.value=cp.value; if(pv)pv.style.background=cp.value; setField(key,cp.value);
-}
-function syncCh(key){
-  const ch=document.getElementById('f_'+key),cp=document.getElementById('cp_'+key),pv=document.getElementById('cprev_'+key);
-  if(!ch)return; const v=ch.value;
-  if(/^#[0-9a-fA-F]{6}$/.test(v)){if(cp)cp.value=v;if(pv)pv.style.background=v}
-  setField(key,v);
-}
 function updateCC(key){
   const el=document.getElementById('f_'+key),cc=document.getElementById('cc_'+key);
   if(el&&cc){const l=el.value.length;cc.textContent=`${l}/155`;cc.classList.toggle('over',l>155)}

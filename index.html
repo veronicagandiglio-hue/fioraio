@@ -1519,7 +1519,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  loading: lazy;
+  
   transition: transform 0.4s ease;
 }
 
@@ -1981,7 +1981,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  loading: lazy;
+  
   transition: transform 0.6s ease;
 }
 
@@ -3681,7 +3681,7 @@ margin-bottom: 120px;}
         <img
           src=""
           alt=""
-          loading="lazy"
+          
           data-placeholder="placeholder_servizio_1.jpg"
           onerror="this.onerror=null; this.src=this.dataset.placeholder;"
         />
@@ -3699,7 +3699,7 @@ margin-bottom: 120px;}
         <img
           src=""
           alt=""
-          loading="lazy"
+          
           data-placeholder="placeholder_servizio_2.jpg"
           onerror="this.onerror=null; this.src=this.dataset.placeholder;"
         />
@@ -3717,7 +3717,7 @@ margin-bottom: 120px;}
         <img
           src=""
           alt=""
-          loading="lazy"
+        
           data-placeholder="placeholder_servizio_3.jpg"
           onerror="this.onerror=null; this.src=this.dataset.placeholder;"
         />
@@ -3735,7 +3735,7 @@ margin-bottom: 120px;}
         <img
           src=""
           alt=""
-          loading="lazy"
+         
           data-placeholder="placeholder_servizio_4.jpg"
           onerror="this.onerror=null; this.src=this.dataset.placeholder;"
         />
@@ -3753,7 +3753,7 @@ margin-bottom: 120px;}
         <img
           src=""
           alt=""
-          loading="lazy"
+          
           data-placeholder="placeholder_servizio_5.jpg"
           onerror="this.onerror=null; this.src=this.dataset.placeholder;"
         />
@@ -3771,7 +3771,7 @@ margin-bottom: 120px;}
         <img
           src=""
           alt=""
-          loading="lazy"
+          
           data-placeholder="placeholder_servizio_6.jpg"
           onerror="this.onerror=null; this.src=this.dataset.placeholder;"
         />
@@ -4031,7 +4031,7 @@ margin-bottom: 120px;}
           id="footer-map-iframe"
           src=""
           title="Mappa del negozio"
-          loading="lazy"
+         
           allowfullscreen
           referrerpolicy="no-referrer-when-downgrade"
         ></iframe>
@@ -5934,7 +5934,7 @@ tutteLePhoto.forEach((foto, idx) => {
   const img = document.createElement('img');
   img.src                 = foto.url;
   img.alt                 = foto.didascalia || ('Composizione floreale ' + (idx + 1));
-  img.loading             = 'lazy';
+  
   img.dataset.placeholder = foto.placeholder;
   img.onerror = function() {
     this.onerror = null;

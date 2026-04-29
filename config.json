@@ -28,7 +28,7 @@
   "popup_attivo": "SI",
   "popup_testo": "",
   "popup_scadenza": "",
-  "hero_layout": "SENZA_FOTO",
+  "hero_layout": "CON_FOTO_SFONDO",
   "hero_foto": "generated-image-1.webp",
   "hero_placeholder": "generated-image-1.webp",
   "hero_sfondo_astratto": "generated-image-hero.webp",

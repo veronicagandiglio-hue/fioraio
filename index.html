@@ -4255,19 +4255,19 @@ margin-bottom: 120px;}
       setOg('og:description', cfg.seo_descrizione  || '');
       setOg('og:image',       sanitizeImgPath(cfg.og_immagine || ''));
 
-      // Schema JSON-LD
+      // Schema JSON-LD AUTO-GENERATO
       const schema = document.getElementById('schema-local');
       if (schema) {
         const data = {
           '@context': 'https://schema.org',
           '@type': 'Florist',
-          'name': cfg.schema_nome        || '',
+          'name': cfg.footer_nome || cfg.navbar_logo_testo || cfg.seo_titolo || '',
           'address': {
             '@type': 'PostalAddress',
-            'streetAddress': cfg.schema_indirizzo || ''
+            'streetAddress': cfg.footer_indirizzo || ''
           },
-          'telephone': cfg.schema_telefono || '',
-          'openingHours': cfg.schema_orari  || ''
+          'telephone': cfg.footer_telefono || cfg.footer_whatsapp || '',
+          'openingHours': cfg.footer_orari  || ''
         };
         schema.textContent = JSON.stringify(data);
       }
@@ -5827,937 +5827,866 @@ document.addEventListener('configLoaded', (e) => {
   if (!bentoEl) return;
 
   const n = Math.min(fotoBase.length, 9);
-  const bentoClasse = n >= 4 ? 'bento-' + Math.min(n, 9) : 'bento-4';
-  bentoEl.classList.add(bentoClasse);
+const bentoClasse = n >= 4 ? 'bento-' + Math.min(n, 9) : 'bento-4';
+bentoEl.classList.add(bentoClasse);
+fotoBase.slice(0, 9).forEach((foto, idx) => {
+const cell = document.createElement('div');
+cell.className = 'bento-cell';
+cell.setAttribute('role', 'listitem');
+cell.setAttribute('tabindex', '0');
+cell.setAttribute('aria-label', foto.didascalia || ('Foto ' + (idx + 1)));
+cell.style.setProperty('--cell-index', idx);
+cell.style.transitionDelay = (idx * 0.08) + 's';
+code
+Code
+const img = document.createElement('img');
+img.src                 = foto.url;
+img.alt                 = foto.didascalia || ('Composizione floreale ' + (idx + 1));
+img.dataset.placeholder = foto.placeholder;
+img.onerror = function() {
+  this.onerror = null;
+  this.src = this.dataset.placeholder;
+};
 
-  fotoBase.slice(0, 9).forEach((foto, idx) => {
-    const cell = document.createElement('div');
-    cell.className = 'bento-cell';
-    cell.setAttribute('role', 'listitem');
-    cell.setAttribute('tabindex', '0');
-    cell.setAttribute('aria-label', foto.didascalia || ('Foto ' + (idx + 1)));
-    cell.style.setProperty('--cell-index', idx);
-    cell.style.transitionDelay = (idx * 0.08) + 's';
+cell.appendChild(img);
+cell.dataset.fotoIndex = idx;
+cell.dataset.didascalia = foto.didascalia || '';
 
-    const img = document.createElement('img');
-    img.src                 = foto.url;
-    img.alt                 = foto.didascalia || ('Composizione floreale ' + (idx + 1));
-    img.dataset.placeholder = foto.placeholder;
-    img.onerror = function() {
-      this.onerror = null;
-      this.src = this.dataset.placeholder;
-    };
+cell.addEventListener('click', () => {
+  openGalleriaEstesa(idx, cell);
+});
 
-    cell.appendChild(img);
-    cell.dataset.fotoIndex = idx;
-    cell.dataset.didascalia = foto.didascalia || '';
+cell.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' || ev.key === ' ') {
+    ev.preventDefault();
+    openGalleriaEstesa(idx, cell);
+  }
+});
 
-    cell.addEventListener('click', () => {
-      openGalleriaEstesa(idx, cell);
-    });
+bentoEl.appendChild(cell);
+});
+/* ============================================================
+2.03 — ETHEREAL MASK REVEAL
+============================================================ */
+const ioBento = new IntersectionObserver((entries) => {
+entries.forEach(entry => {
+if (entry.isIntersecting) {
+entry.target.classList.add('is-revealed');
+ioBento.unobserve(entry.target);
+}
+});
+}, { threshold: 0 });
+bentoEl.querySelectorAll('.bento-cell').forEach(cell => {
+ioBento.observe(cell);
+});
+/* ============================================================
+GALLERIA ESTESA
+============================================================ */
+const fotoEstese =[];
+const galleriaEstesaAttiva = isOn(cfg.galleria_estesa_attiva);
+if (galleriaEstesaAttiva) {
+for (let i = 1; i <= 20; i++) {
+if (!isOn(cfg['foto_estesa_' + i + 'attiva'])) continue;
+const url = sanitizeImgPath(cfg['foto_estesa' + i + 'url'] || '');
+if (url === '') continue;
+fotoEstese.push({
+index: i,
+url: url,
+placeholder: sanitizeImgPath(
+cfg['foto_estesa' + i + 'placeholder'] || ('placeholder_estesa' + i + '.jpg')
+),
+didascalia: ''
+});
+}
+}
+const tutteLePhoto = [
+...fotoBase,
+...fotoEstese
+];
+const ctaPill = document.getElementById('gallery-cta-pill');
+if (ctaPill) {
+if (galleriaEstesaAttiva && tutteLePhoto.length > 0) {
+ctaPill.style.display = 'inline-flex';
+const ctaTesto = (cfg.galleria_estesa_testo_bottone || 'Vedi tutta la galleria').trim();
+ctaPill.textContent = ctaTesto + ' →';
+ctaPill.addEventListener('click', () => {
+openGalleriaEstesa(0, null);
+});
+} else {
+ctaPill.style.display = 'none';
+}
+}
+const extGrid = document.getElementById('gallery-ext-grid');
+const extCounter = document.getElementById('gallery-ext-counter');
+const extOverlay = document.getElementById('gallery-ext-overlay');
+if (extGrid && tutteLePhoto.length > 0) {
+extGrid.innerHTML = '';
+code
+Code
+tutteLePhoto.forEach((foto, idx) => {
+  const thumb = document.createElement('div');
+  thumb.className = 'gallery-ext-thumb';
+  thumb.setAttribute('role', 'listitem');
+  thumb.setAttribute('tabindex', '0');
+  thumb.setAttribute('aria-label', foto.didascalia || ('Foto ' + (idx + 1)));
+  thumb.dataset.idx = idx;
 
-    cell.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter' || ev.key === ' ') {
-        ev.preventDefault();
-        openGalleriaEstesa(idx, cell);
-      }
-    });
+  const img = document.createElement('img');
+  img.src                 = foto.url;
+  img.alt                 = foto.didascalia || ('Composizione floreale ' + (idx + 1));
+  img.loading             = 'lazy';
+  img.dataset.placeholder = foto.placeholder;
+  img.onerror = function() {
+    this.onerror = null;
+    this.src = this.dataset.placeholder;
+  };
 
-    bentoEl.appendChild(cell);
+  thumb.appendChild(img);
+
+  thumb.addEventListener('click', () => {
+    switchToSingle(idx);
   });
 
-  /* ============================================================
-     2.03 — ETHEREAL MASK REVEAL
-  ============================================================ */
-  const ioBento = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-revealed');
-        ioBento.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0 });
-
-  bentoEl.querySelectorAll('.bento-cell').forEach(cell => {
-    ioBento.observe(cell);
+  thumb.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      switchToSingle(idx);
+    }
   });
 
-  /* ============================================================
-     GALLERIA ESTESA
-  ============================================================ */
-  const fotoEstese =[];
-  const galleriaEstesaAttiva = isOn(cfg.galleria_estesa_attiva);
+  extGrid.appendChild(thumb);
+});
 
-  if (galleriaEstesaAttiva) {
-    for (let i = 1; i <= 20; i++) {
-      if (!isOn(cfg['foto_estesa_' + i + '_attiva'])) continue;
-      const url = sanitizeImgPath(cfg['foto_estesa_' + i + '_url'] || '');
-      if (url === '') continue;
-      fotoEstese.push({
-        index:       i,
-        url:         url,
-        placeholder: sanitizeImgPath(
-          cfg['foto_estesa_' + i + '_placeholder'] || ('placeholder_estesa_' + i + '.jpg')
-        ),
-        didascalia:  ''
-      });
-    }
+if (extCounter) {
+  extCounter.textContent = tutteLePhoto.length + ' ' +
+    (tutteLePhoto.length === 1 ? 'immagine' : 'immagini');
+}
+}
+/* ============================================================
+8.03 — EXPANDING MASK
+============================================================ */
+function openGalleriaEstesa(fotoIdx, triggerEl) {
+if (!extOverlay) return;
+code
+Code
+let startClip = 'inset(50% 50% 50% 50%)';
+
+if (triggerEl) {
+  const rect = triggerEl.getBoundingClientRect();
+  const vw   = window.innerWidth;
+  const vh   = window.innerHeight;
+
+  const top    = Math.round((rect.top    / vh) * 100);
+  const right  = Math.round(((vw - rect.right)  / vw) * 100);
+  const bottom = Math.round(((vh - rect.bottom) / vh) * 100);
+  const left   = Math.round((rect.left   / vw) * 100);
+
+  startClip = `inset(${top}% ${right}% ${bottom}% ${left}%)`;
+}
+
+extOverlay.style.clipPath  = startClip;
+extOverlay.style.display   = 'flex';
+extOverlay.classList.add('is-opening');
+
+extOverlay.getBoundingClientRect();
+
+extOverlay.style.transition = 'clip-path 500ms cubic-bezier(0.76, 0, 0.24, 1)';
+extOverlay.style.clipPath   = 'inset(0% 0% 0% 0%)';
+
+extOverlay.classList.add('is-open');
+extOverlay.classList.remove('is-opening');
+
+document.body.style.overflow = 'hidden';
+
+showGridView();
+
+if (fotoIdx >= 0) {
+  const thumbs = extGrid.querySelectorAll('.gallery-ext-thumb');
+  thumbs.forEach(t => t.classList.remove('is-selected'));
+  if (thumbs[fotoIdx]) {
+    thumbs[fotoIdx].classList.add('is-selected');
+    thumbs[fotoIdx].scrollIntoView({ block: 'nearest' });
+  }
+}
+
+extOverlay.focus();
+}
+function closeGalleriaEstesa() {
+if (!extOverlay) return;
+code
+Code
+extOverlay.style.transition = 'clip-path 400ms cubic-bezier(0.76, 0, 0.24, 1)';
+extOverlay.style.clipPath   = 'inset(50% 50% 50% 50%)';
+
+setTimeout(() => {
+  extOverlay.style.display = 'none';
+  extOverlay.classList.remove('is-open');
+  extOverlay.style.clipPath = '';
+  extOverlay.style.transition = '';
+  document.body.style.overflow = '';
+}, 420);
+}
+const closeBtn = document.getElementById('gallery-ext-close');
+if (closeBtn) {
+closeBtn.addEventListener('click', closeGalleriaEstesa);
+}
+document.addEventListener('keydown', (ev) => {
+if (ev.key === 'Escape' && extOverlay && extOverlay.classList.contains('is-open')) {
+closeGalleriaEstesa();
+}
+});
+const toggleGrid = document.getElementById('gallery-toggle-grid');
+const toggleSingle = document.getElementById('gallery-toggle-single');
+const extGridView = document.getElementById('gallery-ext-grid');
+const extSingle = document.getElementById('gallery-ext-single');
+function showGridView() {
+if (extGridView) extGridView.style.display = 'grid';
+if (extSingle) extSingle.classList.remove('is-active');
+if (toggleGrid) { toggleGrid.classList.add('is-active'); toggleGrid.setAttribute('aria-pressed', 'true'); }
+if (toggleSingle) { toggleSingle.classList.remove('is-active'); toggleSingle.setAttribute('aria-pressed', 'false'); }
+}
+function showSingleView() {
+if (extGridView) extGridView.style.display = 'none';
+if (extSingle) extSingle.classList.add('is-active');
+if (toggleGrid) { toggleGrid.classList.remove('is-active'); toggleGrid.setAttribute('aria-pressed', 'false'); }
+if (toggleSingle) { toggleSingle.classList.add('is-active'); toggleSingle.setAttribute('aria-pressed', 'true'); }
+}
+if (toggleGrid) toggleGrid.addEventListener('click', showGridView);
+if (toggleSingle) toggleSingle.addEventListener('click', () => {
+showSingleView();
+switchToSingle(currentSingleIdx >= 0 ? currentSingleIdx : 0);
+});
+let currentSingleIdx = 0;
+function switchToSingle(idx) {
+if (!tutteLePhoto || tutteLePhoto.length === 0) return;
+const safeIdx = Math.max(0, Math.min(idx, tutteLePhoto.length - 1));
+currentSingleIdx = safeIdx;
+code
+Code
+const foto      = tutteLePhoto[safeIdx];
+const singleImg = document.getElementById('gallery-ext-single-img');
+const caption   = document.getElementById('gallery-ext-caption');
+
+if (singleImg) {
+  singleImg.src                 = foto.url;
+  singleImg.alt                 = foto.didascalia || ('Composizione floreale ' + (safeIdx + 1));
+  singleImg.dataset.placeholder = foto.placeholder;
+}
+
+if (caption) {
+  caption.textContent = foto.didascalia || '';
+  caption.style.display = foto.didascalia ? '' : 'none';
+}
+
+const thumbs = extGrid ? extGrid.querySelectorAll('.gallery-ext-thumb') :[];
+thumbs.forEach((t, i) => {
+  t.classList.toggle('is-selected', i === safeIdx);
+});
+
+showSingleView();
+}
+const prevBtn = document.getElementById('gallery-prev');
+const nextBtn = document.getElementById('gallery-next');
+if (prevBtn) {
+prevBtn.addEventListener('click', () => {
+const newIdx = (currentSingleIdx - 1 + tutteLePhoto.length) % tutteLePhoto.length;
+switchToSingle(newIdx);
+});
+}
+if (nextBtn) {
+nextBtn.addEventListener('click', () => {
+const newIdx = (currentSingleIdx + 1) % tutteLePhoto.length;
+switchToSingle(newIdx);
+});
+}
+document.addEventListener('keydown', (ev) => {
+if (!extOverlay || !extOverlay.classList.contains('is-open')) return;
+if (!extSingle || !extSingle.classList.contains('is-active')) return;
+if (ev.key === 'ArrowLeft') { ev.preventDefault(); prevBtn && prevBtn.click(); }
+if (ev.key === 'ArrowRight') { ev.preventDefault(); nextBtn && nextBtn.click(); }
+});
+if (section.style.display !== 'none') {
+const ioSection = new IntersectionObserver((entries) => {
+entries.forEach(entry => {
+if (entry.isIntersecting) {
+entry.target.classList.add('is-in-view');
+ioSection.unobserve(entry.target);
+}
+});
+}, { threshold: 0 });
+ioSection.observe(section);
+}
+}); // fine configLoaded galleria
+document.addEventListener('configLoaded', (e) => {
+const cfg = e.detail;
+/* ============================================================
+GUARD: sezione attiva?
+============================================================ */
+const section = document.getElementById('section-recensioni');
+if (!section) return;
+if (!isOn(cfg.recensioni_attive)) {
+section.style.display = 'none';
+return;
+}
+/* ============================================================
+RACCOLTA RECENSIONI ATTIVE
+============================================================ */
+const recensioniDati =[];
+for (let i = 1; i <= 5; i++) {
+if (!isOn(cfg['recensione_' + i + 'attiva'])) continue;
+const nome = (cfg['recensione' + i + 'nome'] || '').trim();
+const testo = (cfg['recensione' + i + 'testo'] || '').trim();
+if (!nome && !testo) continue;
+const stelle = Math.max(1, Math.min(5, parseInt(cfg['recensione' + i + '_stelle'] || '5', 10) || 5));
+recensioniDati.push({ id: i, nome, testo, stelle });
+}
+if (recensioniDati.length === 0) {
+section.style.display = 'none';
+return;
+}
+section.style.display = '';
+/* ============================================================
+TITOLO H2 con target per SVG callout (6.02)
+============================================================ */
+const headlineEl = document.getElementById('reviews-headline');
+const titoloCompleto = (cfg.recensioni_titolo || 'Cosa dicono di noi').trim();
+if (headlineEl) {
+const parole = titoloCompleto.split(' ').filter(p => p.length > 0);
+code
+Code
+if (parole.length < 2) {
+  headlineEl.textContent = titoloCompleto;
+} else {
+  const targetIdx  = 1;
+  const primaMetà  = parole.slice(0, targetIdx).join(' ');
+  const parolaTarget = parole[targetIdx];
+  const secondaMetà = parole.slice(targetIdx + 1).join(' ');
+
+  headlineEl.innerHTML = '';
+
+  if (primaMetà) {
+    headlineEl.appendChild(document.createTextNode(primaMetà + ' '));
   }
 
-  const tutteLePhoto = [
-    ...fotoBase,
-    ...fotoEstese
-  ];
+  const targetSpan = document.createElement('span');
+  targetSpan.className = 'reviews-headline-target';
+  targetSpan.textContent = parolaTarget;
 
-  const ctaPill = document.getElementById('gallery-cta-pill');
-  if (ctaPill) {
-    if (galleriaEstesaAttiva && tutteLePhoto.length > 0) {
-      ctaPill.style.display = 'inline-flex';
-      const ctaTesto = (cfg.galleria_estesa_testo_bottone || 'Vedi tutta la galleria').trim();
-      ctaPill.textContent = ctaTesto + ' →';
-      ctaPill.addEventListener('click', () => {
-        openGalleriaEstesa(0, null);
-      });
-    } else {
-      ctaPill.style.display = 'none';
-    }
+  const svgNS  = 'http://www.w3.org/2000/svg';
+  const svg    = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('class', 'reviews-callout-svg');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  svg.setAttribute('viewBox', '-10 -8 120 36');
+  svg.setAttribute('preserveAspectRatio', 'none');
+
+  const path = document.createElementNS(svgNS, 'path');
+  path.setAttribute('class', 'reviews-callout-circle');
+  path.setAttribute('d', 'M 5,14 C 3,3 18,-4 50,-5 C 82,-6 101,2 103,14 C 105,26 88,32 50,33 C 12,34 -1,26 5,14 Z');
+  path.setAttribute('vector-effect', 'non-scaling-stroke');
+
+  svg.appendChild(path);
+  targetSpan.appendChild(svg);
+  headlineEl.appendChild(targetSpan);
+
+  if (secondaMetà) {
+    headlineEl.appendChild(document.createTextNode(' ' + secondaMetà));
   }
+}
+}
+/* ============================================================
+COSTRUZIONE CARD
+============================================================ */
+const gridEl = document.getElementById('reviews-grid');
+if (!gridEl) return;
+gridEl.innerHTML = '';
+const COLS_VISIBILI_DESKTOP = 3;
+const COLS_VISIBILI_TABLET = 2;
+const COLS_VISIBILI_MOBILE = 1;
+recensioniDati.forEach((rec, idx) => {
+const wrapper = document.createElement('div');
+wrapper.className = 'review-card-wrapper';
+wrapper.setAttribute('role', 'listitem');
+code
+Code
+const card = document.createElement('article');
+card.className = 'review-card';
+card.dataset.idx = idx;
 
-  const extGrid    = document.getElementById('gallery-ext-grid');
-  const extCounter = document.getElementById('gallery-ext-counter');
-  const extOverlay = document.getElementById('gallery-ext-overlay');
+if (idx >= 3) {
+  card.classList.add('is-hidden-extra');
+}
 
-  if (extGrid && tutteLePhoto.length > 0) {
-    extGrid.innerHTML = '';
+const quoteEl = document.createElement('span');
+quoteEl.className       = 'review-quote';
+quoteEl.textContent     = '\u201C'; /* " */
+quoteEl.setAttribute('aria-hidden', 'true');
+card.appendChild(quoteEl);
 
-    tutteLePhoto.forEach((foto, idx) => {
-      const thumb = document.createElement('div');
-      thumb.className = 'gallery-ext-thumb';
-      thumb.setAttribute('role', 'listitem');
-      thumb.setAttribute('tabindex', '0');
-      thumb.setAttribute('aria-label', foto.didascalia || ('Foto ' + (idx + 1)));
-      thumb.dataset.idx = idx;
+const testoEl = document.createElement('p');
+testoEl.className = 'review-text';
+if (rec.testo) {
+  testoEl.textContent = rec.testo;
+} else {
+  testoEl.style.display = 'none';
+}
+card.appendChild(testoEl);
 
-      const img = document.createElement('img');
-      img.src                 = foto.url;
-      img.alt                 = foto.didascalia || ('Composizione floreale ' + (idx + 1));
-      img.loading             = 'lazy';
-      img.dataset.placeholder = foto.placeholder;
-      img.onerror = function() {
-        this.onerror = null;
-        this.src = this.dataset.placeholder;
-      };
+const nomeEl = document.createElement('span');
+nomeEl.className = 'review-name';
+if (rec.nome) {
+  nomeEl.textContent = rec.nome;
+} else {
+  nomeEl.style.display = 'none';
+}
+card.appendChild(nomeEl);
 
-      thumb.appendChild(img);
+const stelleEl = document.createElement('div');
+stelleEl.className       = 'review-stars';
+stelleEl.setAttribute('aria-label', rec.stelle + ' stelle su 5');
+stelleEl.setAttribute('role', 'img');
 
-      thumb.addEventListener('click', () => {
-        switchToSingle(idx);
-      });
+for (let s = 1; s <= 5; s++) {
+  const star = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  star.setAttribute('class',   'review-star ' + (s <= rec.stelle ? 'is-active' : 'is-inactive'));
+  star.setAttribute('viewBox', '0 0 12 12');
+  star.setAttribute('aria-hidden', 'true');
+  const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  poly.setAttribute('points', '6,1 7.5,4.5 11,4.8 8.5,7 9.3,10.5 6,8.5 2.7,10.5 3.5,7 1,4.8 4.5,4.5');
+  star.appendChild(poly);
+  stelleEl.appendChild(star);
+}
+card.appendChild(stelleEl);
 
-      thumb.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' || ev.key === ' ') {
-          ev.preventDefault();
-          switchToSingle(idx);
-        }
-      });
-
-      extGrid.appendChild(thumb);
-    });
-
-    if (extCounter) {
-      extCounter.textContent = tutteLePhoto.length + ' ' +
-        (tutteLePhoto.length === 1 ? 'immagine' : 'immagini');
-    }
+wrapper.appendChild(card);
+gridEl.appendChild(wrapper);
+});
+/* ============================================================
+UI CONDIZIONALE — mostra/nasconde CTA "Leggi tutte"
+============================================================ */
+const ctaLeggi = document.getElementById('reviews-cta-leggi');
+const expandWrap = document.getElementById('reviews-expand-wrap');
+let extraEspanse = false;
+function getColsVisibili() {
+if (window.innerWidth < 768) return COLS_VISIBILI_MOBILE;
+if (window.innerWidth < 1025) return COLS_VISIBILI_TABLET;
+return COLS_VISIBILI_DESKTOP;
+}
+function aggiornaUI() {
+const cols = getColsVisibili();
+const totale = recensioniDati.length;
+code
+Code
+if (totale <= cols) {
+  if (ctaLeggi)   ctaLeggi.style.display   = 'none';
+  if (expandWrap) expandWrap.style.display  = 'none';
+  gridEl.querySelectorAll('.review-card').forEach(c => {
+    c.classList.remove('is-hidden-extra');
+    c.style.display = '';
+  });
+} else {
+  if (!extraEspanse) {
+    if (ctaLeggi)  ctaLeggi.style.display  = '';
+    if (expandWrap) expandWrap.style.display = '';
   }
+}
+}
+aggiornaUI();
+if (window.ResizeObserver) {
+const ro = new ResizeObserver(() => aggiornaUI());
+ro.observe(document.body);
+} else {
+window.addEventListener('resize', aggiornaUI, { passive: true });
+}
+function espandiExtra() {
+gridEl.querySelectorAll('.review-card.is-hidden-extra').forEach(c => {
+c.classList.remove('is-hidden-extra');
+c.classList.add('is-expanded');
+c.style.opacity = '0';
+c.style.transform = 'translateY(8px)';
+requestAnimationFrame(() => {
+c.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+c.style.opacity = '1';
+c.style.transform = 'translateY(0)';
+});
+});
+code
+Code
+extraEspanse = true;
 
-  /* ============================================================
-     8.03 — EXPANDING MASK
-  ============================================================ */
-  function openGalleriaEstesa(fotoIdx, triggerEl) {
-    if (!extOverlay) return;
+if (ctaLeggi) {
+  ctaLeggi.style.display = 'none';
+  ctaLeggi.setAttribute('aria-expanded', 'true');
+}
+if (expandWrap) expandWrap.style.display = 'none';
+}
+if (ctaLeggi) ctaLeggi.addEventListener('click', espandiExtra);
+/* ============================================================
+9.03 — 3D PERSPECTIVE TILT
+============================================================ */
+const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+if (supportsHover) {
+gridEl.querySelectorAll('.review-card-wrapper').forEach(wrapper => {
+const card = wrapper.querySelector('.review-card');
+if (!card) return;
+code
+Code
+wrapper.addEventListener('mousemove', (ev) => {
+    const rect  = wrapper.getBoundingClientRect();
+    const normX = ((ev.clientX - rect.left)  / rect.width)  * 2 - 1;
+    const normY = ((ev.clientY - rect.top)   / rect.height) * 2 - 1;
 
-    let startClip = 'inset(50% 50% 50% 50%)';
+    const rotY =  normX * 10;
+    const rotX = -normY * 10;
 
-    if (triggerEl) {
-      const rect = triggerEl.getBoundingClientRect();
-      const vw   = window.innerWidth;
-      const vh   = window.innerHeight;
+    card.style.transition = 'transform 0.1s ease';
+    card.style.transform  = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  });
 
-      const top    = Math.round((rect.top    / vh) * 100);
-      const right  = Math.round(((vw - rect.right)  / vw) * 100);
-      const bottom = Math.round(((vh - rect.bottom) / vh) * 100);
-      const left   = Math.round((rect.left   / vw) * 100);
+  wrapper.addEventListener('mouseleave', () => {
+    card.style.transition = 'transform 0.6s cubic-bezier(0.34,1.56,0.64,1)';
+    card.style.transform  = 'rotateX(0deg) rotateY(0deg)';
+  });
+});
+}
+/* ============================================================
+6.02 — HAND-DRAWN SVG CALLOUT
+============================================================ */
+function initSVGCallout() {
+const pathEl = document.querySelector('.reviews-callout-circle');
+if (!pathEl) return;
+code
+Code
+let totalLength;
+try {
+  totalLength = pathEl.getTotalLength();
+} catch (err) {
+  totalLength = 260;
+}
 
-      startClip = `inset(${top}% ${right}% ${bottom}% ${left}%)`;
-    }
+pathEl.style.strokeDasharray  = totalLength;
+pathEl.style.strokeDashoffset = totalLength;
+pathEl.style.transition       = 'none';
 
-    extOverlay.style.clipPath  = startClip;
-    extOverlay.style.display   = 'flex';
-    extOverlay.classList.add('is-opening');
-
-    extOverlay.getBoundingClientRect();
-
-    extOverlay.style.transition = 'clip-path 500ms cubic-bezier(0.76, 0, 0.24, 1)';
-    extOverlay.style.clipPath   = 'inset(0% 0% 0% 0%)';
-
-    extOverlay.classList.add('is-open');
-    extOverlay.classList.remove('is-opening');
-
-    document.body.style.overflow = 'hidden';
-
-    showGridView();
-
-    if (fotoIdx >= 0) {
-      const thumbs = extGrid.querySelectorAll('.gallery-ext-thumb');
-      thumbs.forEach(t => t.classList.remove('is-selected'));
-      if (thumbs[fotoIdx]) {
-        thumbs[fotoIdx].classList.add('is-selected');
-        thumbs[fotoIdx].scrollIntoView({ block: 'nearest' });
-      }
-    }
-
-    extOverlay.focus();
-  }
-
-  function closeGalleriaEstesa() {
-    if (!extOverlay) return;
-
-    extOverlay.style.transition = 'clip-path 400ms cubic-bezier(0.76, 0, 0.24, 1)';
-    extOverlay.style.clipPath   = 'inset(50% 50% 50% 50%)';
+const ioCallout = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
 
     setTimeout(() => {
-      extOverlay.style.display = 'none';
-      extOverlay.classList.remove('is-open');
-      extOverlay.style.clipPath = '';
-      extOverlay.style.transition = '';
-      document.body.style.overflow = '';
-    }, 420);
-  }
+      pathEl.style.transition       = 'stroke-dashoffset 800ms cubic-bezier(0.4,0,0.2,1)';
+      pathEl.style.strokeDashoffset = '0';
+    }, 300);
 
-  const closeBtn = document.getElementById('gallery-ext-close');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', closeGalleriaEstesa);
-  }
-
-  document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape' && extOverlay && extOverlay.classList.contains('is-open')) {
-      closeGalleriaEstesa();
-    }
+    ioCallout.unobserve(entry.target);
   });
-
-  const toggleGrid   = document.getElementById('gallery-toggle-grid');
-  const toggleSingle = document.getElementById('gallery-toggle-single');
-  const extGridView  = document.getElementById('gallery-ext-grid');
-  const extSingle    = document.getElementById('gallery-ext-single');
-
-  function showGridView() {
-    if (extGridView) extGridView.style.display = 'grid';
-    if (extSingle)   extSingle.classList.remove('is-active');
-    if (toggleGrid)   { toggleGrid.classList.add('is-active');    toggleGrid.setAttribute('aria-pressed', 'true');  }
-    if (toggleSingle) { toggleSingle.classList.remove('is-active'); toggleSingle.setAttribute('aria-pressed', 'false'); }
-  }
-
-  function showSingleView() {
-    if (extGridView) extGridView.style.display = 'none';
-    if (extSingle)   extSingle.classList.add('is-active');
-    if (toggleGrid)   { toggleGrid.classList.remove('is-active');  toggleGrid.setAttribute('aria-pressed', 'false'); }
-    if (toggleSingle) { toggleSingle.classList.add('is-active');   toggleSingle.setAttribute('aria-pressed', 'true'); }
-  }
-
-  if (toggleGrid)   toggleGrid.addEventListener('click',   showGridView);
-  if (toggleSingle) toggleSingle.addEventListener('click', () => {
-    showSingleView();
-    switchToSingle(currentSingleIdx >= 0 ? currentSingleIdx : 0);
-  });
-
-  let currentSingleIdx = 0;
-
-  function switchToSingle(idx) {
-    if (!tutteLePhoto || tutteLePhoto.length === 0) return;
-    const safeIdx = Math.max(0, Math.min(idx, tutteLePhoto.length - 1));
-    currentSingleIdx = safeIdx;
-
-    const foto      = tutteLePhoto[safeIdx];
-    const singleImg = document.getElementById('gallery-ext-single-img');
-    const caption   = document.getElementById('gallery-ext-caption');
-
-    if (singleImg) {
-      singleImg.src                 = foto.url;
-      singleImg.alt                 = foto.didascalia || ('Composizione floreale ' + (safeIdx + 1));
-      singleImg.dataset.placeholder = foto.placeholder;
-    }
-
-    if (caption) {
-      caption.textContent = foto.didascalia || '';
-      caption.style.display = foto.didascalia ? '' : 'none';
-    }
-
-    const thumbs = extGrid ? extGrid.querySelectorAll('.gallery-ext-thumb') :[];
-    thumbs.forEach((t, i) => {
-      t.classList.toggle('is-selected', i === safeIdx);
-    });
-
-    showSingleView();
-  }
-
-  const prevBtn = document.getElementById('gallery-prev');
-  const nextBtn = document.getElementById('gallery-next');
-
-  if (prevBtn) {
-    prevBtn.addEventListener('click', () => {
-      const newIdx = (currentSingleIdx - 1 + tutteLePhoto.length) % tutteLePhoto.length;
-      switchToSingle(newIdx);
-    });
-  }
-
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      const newIdx = (currentSingleIdx + 1) % tutteLePhoto.length;
-      switchToSingle(newIdx);
-    });
-  }
-
-  document.addEventListener('keydown', (ev) => {
-    if (!extOverlay || !extOverlay.classList.contains('is-open')) return;
-    if (!extSingle  || !extSingle.classList.contains('is-active')) return;
-    if (ev.key === 'ArrowLeft')  { ev.preventDefault(); prevBtn && prevBtn.click(); }
-    if (ev.key === 'ArrowRight') { ev.preventDefault(); nextBtn && nextBtn.click(); }
-  });
-
-  if (section.style.display !== 'none') {
-    const ioSection = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-in-view');
-          ioSection.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0 });
-    ioSection.observe(section);
-  }
-
-}); // fine configLoaded galleria
-
-document.addEventListener('configLoaded', (e) => {
-  const cfg = e.detail;
-
-  /* ============================================================
-     GUARD: sezione attiva?
-  ============================================================ */
-  const section = document.getElementById('section-recensioni');
-  if (!section) return;
-
-  if (!isOn(cfg.recensioni_attive)) {
-    section.style.display = 'none';
-    return;
-  }
-
-  /* ============================================================
-     RACCOLTA RECENSIONI ATTIVE
-  ============================================================ */
-  const recensioniDati =[];
-  for (let i = 1; i <= 5; i++) {
-    if (!isOn(cfg['recensione_' + i + '_attiva'])) continue;
-    const nome  = (cfg['recensione_' + i + '_nome']  || '').trim();
-    const testo = (cfg['recensione_' + i + '_testo'] || '').trim();
-    if (!nome && !testo) continue;
-    const stelle = Math.max(1, Math.min(5, parseInt(cfg['recensione_' + i + '_stelle'] || '5', 10) || 5));
-    recensioniDati.push({ id: i, nome, testo, stelle });
-  }
-
-  if (recensioniDati.length === 0) {
-    section.style.display = 'none';
-    return;
-  }
-
-  section.style.display = '';
-
-  /* ============================================================
-     TITOLO H2 con target per SVG callout (6.02)
-  ============================================================ */
-  const headlineEl = document.getElementById('reviews-headline');
-  const titoloCompleto = (cfg.recensioni_titolo || 'Cosa dicono di noi').trim();
-
-  if (headlineEl) {
-    const parole = titoloCompleto.split(' ').filter(p => p.length > 0);
-
-    if (parole.length < 2) {
-      headlineEl.textContent = titoloCompleto;
-    } else {
-      const targetIdx  = 1;
-      const primaMetà  = parole.slice(0, targetIdx).join(' ');
-      const parolaTarget = parole[targetIdx];
-      const secondaMetà = parole.slice(targetIdx + 1).join(' ');
-
-      headlineEl.innerHTML = '';
-
-      if (primaMetà) {
-        headlineEl.appendChild(document.createTextNode(primaMetà + ' '));
-      }
-
-      const targetSpan = document.createElement('span');
-      targetSpan.className = 'reviews-headline-target';
-      targetSpan.textContent = parolaTarget;
-
-      const svgNS  = 'http://www.w3.org/2000/svg';
-      const svg    = document.createElementNS(svgNS, 'svg');
-      svg.setAttribute('class', 'reviews-callout-svg');
-      svg.setAttribute('aria-hidden', 'true');
-      svg.setAttribute('focusable', 'false');
-      svg.setAttribute('viewBox', '-10 -8 120 36');
-      svg.setAttribute('preserveAspectRatio', 'none');
-
-      const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('class', 'reviews-callout-circle');
-      path.setAttribute('d', 'M 5,14 C 3,3 18,-4 50,-5 C 82,-6 101,2 103,14 C 105,26 88,32 50,33 C 12,34 -1,26 5,14 Z');
-      path.setAttribute('vector-effect', 'non-scaling-stroke');
-
-      svg.appendChild(path);
-      targetSpan.appendChild(svg);
-      headlineEl.appendChild(targetSpan);
-
-      if (secondaMetà) {
-        headlineEl.appendChild(document.createTextNode(' ' + secondaMetà));
-      }
-    }
-  }
-
-  /* ============================================================
-     COSTRUZIONE CARD
-  ============================================================ */
-  const gridEl = document.getElementById('reviews-grid');
-  if (!gridEl) return;
-
-  gridEl.innerHTML = '';
-
-  const COLS_VISIBILI_DESKTOP = 3;
-  const COLS_VISIBILI_TABLET  = 2;
-  const COLS_VISIBILI_MOBILE  = 1;
-
-  recensioniDati.forEach((rec, idx) => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'review-card-wrapper';
-    wrapper.setAttribute('role', 'listitem');
-
-    const card = document.createElement('article');
-    card.className = 'review-card';
-    card.dataset.idx = idx;
-
-    if (idx >= 3) {
-      card.classList.add('is-hidden-extra');
-    }
-
-    const quoteEl = document.createElement('span');
-    quoteEl.className       = 'review-quote';
-    quoteEl.textContent     = '\u201C'; /* " */
-    quoteEl.setAttribute('aria-hidden', 'true');
-    card.appendChild(quoteEl);
-
-    const testoEl = document.createElement('p');
-    testoEl.className = 'review-text';
-    if (rec.testo) {
-      testoEl.textContent = rec.testo;
-    } else {
-      testoEl.style.display = 'none';
-    }
-    card.appendChild(testoEl);
-
-    const nomeEl = document.createElement('span');
-    nomeEl.className = 'review-name';
-    if (rec.nome) {
-      nomeEl.textContent = rec.nome;
-    } else {
-      nomeEl.style.display = 'none';
-    }
-    card.appendChild(nomeEl);
-
-    const stelleEl = document.createElement('div');
-    stelleEl.className       = 'review-stars';
-    stelleEl.setAttribute('aria-label', rec.stelle + ' stelle su 5');
-    stelleEl.setAttribute('role', 'img');
-
-    for (let s = 1; s <= 5; s++) {
-      const star = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      star.setAttribute('class',   'review-star ' + (s <= rec.stelle ? 'is-active' : 'is-inactive'));
-      star.setAttribute('viewBox', '0 0 12 12');
-      star.setAttribute('aria-hidden', 'true');
-      const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-      poly.setAttribute('points', '6,1 7.5,4.5 11,4.8 8.5,7 9.3,10.5 6,8.5 2.7,10.5 3.5,7 1,4.8 4.5,4.5');
-      star.appendChild(poly);
-      stelleEl.appendChild(star);
-    }
-    card.appendChild(stelleEl);
-
-    wrapper.appendChild(card);
-    gridEl.appendChild(wrapper);
-  });
-
-  /* ============================================================
-     UI CONDIZIONALE — mostra/nasconde CTA "Leggi tutte"
-  ============================================================ */
-  const ctaLeggi     = document.getElementById('reviews-cta-leggi');
-  const expandWrap   = document.getElementById('reviews-expand-wrap');
-  let   extraEspanse = false;
-
-  function getColsVisibili() {
-    if (window.innerWidth < 768)  return COLS_VISIBILI_MOBILE;
-    if (window.innerWidth < 1025) return COLS_VISIBILI_TABLET;
-    return COLS_VISIBILI_DESKTOP;
-  }
-
-  function aggiornaUI() {
-    const cols   = getColsVisibili();
-    const totale = recensioniDati.length;
-
-    if (totale <= cols) {
-      if (ctaLeggi)   ctaLeggi.style.display   = 'none';
-      if (expandWrap) expandWrap.style.display  = 'none';
-      gridEl.querySelectorAll('.review-card').forEach(c => {
-        c.classList.remove('is-hidden-extra');
-        c.style.display = '';
-      });
-    } else {
-      if (!extraEspanse) {
-        if (ctaLeggi)  ctaLeggi.style.display  = '';
-        if (expandWrap) expandWrap.style.display = '';
-      }
-    }
-  }
-
-  aggiornaUI();
-
-  if (window.ResizeObserver) {
-    const ro = new ResizeObserver(() => aggiornaUI());
-    ro.observe(document.body);
-  } else {
-    window.addEventListener('resize', aggiornaUI, { passive: true });
-  }
-
-  function espandiExtra() {
-    gridEl.querySelectorAll('.review-card.is-hidden-extra').forEach(c => {
-      c.classList.remove('is-hidden-extra');
-      c.classList.add('is-expanded');
-      c.style.opacity   = '0';
-      c.style.transform = 'translateY(8px)';
-      requestAnimationFrame(() => {
-        c.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        c.style.opacity    = '1';
-        c.style.transform  = 'translateY(0)';
-      });
-    });
-
-    extraEspanse = true;
-
-    if (ctaLeggi) {
-      ctaLeggi.style.display = 'none';
-      ctaLeggi.setAttribute('aria-expanded', 'true');
-    }
-    if (expandWrap) expandWrap.style.display = 'none';
-  }
-
-  if (ctaLeggi)  ctaLeggi.addEventListener('click',  espandiExtra);
-
-  /* ============================================================
-     9.03 — 3D PERSPECTIVE TILT
-  ============================================================ */
-  const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-
-  if (supportsHover) {
-    gridEl.querySelectorAll('.review-card-wrapper').forEach(wrapper => {
-      const card = wrapper.querySelector('.review-card');
-      if (!card) return;
-
-      wrapper.addEventListener('mousemove', (ev) => {
-        const rect  = wrapper.getBoundingClientRect();
-        const normX = ((ev.clientX - rect.left)  / rect.width)  * 2 - 1;
-        const normY = ((ev.clientY - rect.top)   / rect.height) * 2 - 1;
-
-        const rotY =  normX * 10;
-        const rotX = -normY * 10;
-
-        card.style.transition = 'transform 0.1s ease';
-        card.style.transform  = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-      });
-
-      wrapper.addEventListener('mouseleave', () => {
-        card.style.transition = 'transform 0.6s cubic-bezier(0.34,1.56,0.64,1)';
-        card.style.transform  = 'rotateX(0deg) rotateY(0deg)';
-      });
-    });
-  }
-
-  /* ============================================================
-     6.02 — HAND-DRAWN SVG CALLOUT
-  ============================================================ */
-  function initSVGCallout() {
-    const pathEl = document.querySelector('.reviews-callout-circle');
-    if (!pathEl) return;
-
-    let totalLength;
-    try {
-      totalLength = pathEl.getTotalLength();
-    } catch (err) {
-      totalLength = 260;
-    }
-
-    pathEl.style.strokeDasharray  = totalLength;
-    pathEl.style.strokeDashoffset = totalLength;
-    pathEl.style.transition       = 'none';
-
-    const ioCallout = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-
-        setTimeout(() => {
-          pathEl.style.transition       = 'stroke-dashoffset 800ms cubic-bezier(0.4,0,0.2,1)';
-          pathEl.style.strokeDashoffset = '0';
-        }, 300);
-
-        ioCallout.unobserve(entry.target);
-      });
-    }, { threshold: 0 });
-
-    ioCallout.observe(section);
-  }
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      initSVGCallout();
-    });
-  });
-
-  if (section.style.display !== 'none') {
-    const ioSection = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-in-view');
-          ioSection.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0 });
-    ioSection.observe(section);
-  }
-
+}, { threshold: 0 });
+
+ioCallout.observe(section);
+}
+requestAnimationFrame(() => {
+requestAnimationFrame(() => {
+initSVGCallout();
+});
+});
+if (section.style.display !== 'none') {
+const ioSection = new IntersectionObserver((entries) => {
+entries.forEach(entry => {
+if (entry.isIntersecting) {
+entry.target.classList.add('is-in-view');
+ioSection.unobserve(entry.target);
+}
+});
+}, { threshold: 0 });
+ioSection.observe(section);
+}
 }); // fine configLoaded recensioni
-
 document.addEventListener('configLoaded', (e) => {
-  const cfg = e.detail;
+const cfg = e.detail;
+/* ============================================================
+GUARD: sezione attiva?
+============================================================ */
+const section = document.getElementById('section-faq');
+if (!section) return;
+const faqDati =[];
+for (let i = 1; i <= 10; i++) {
+if (!isOn(cfg['faq_' + i + 'attiva'])) continue;
+const domanda = (cfg['faq' + i + 'domanda'] || '').trim();
+const risposta = (cfg['faq' + i + '_risposta'] || '').trim();
+if (!domanda) continue;
+faqDati.push({ id: i, domanda, risposta });
+}
+if (faqDati.length === 0) {
+section.style.display = 'none';
+return;
+}
+section.style.display = '';
+const headlineEl = document.getElementById('faq-headline');
+const introEl = document.getElementById('faq-intro-text');
+if (introEl) {
+introEl.style.display = 'none';
+}
+const listEl = document.getElementById('faq-list');
+if (!listEl) return;
+listEl.innerHTML = '';
+faqDati.forEach((faq, idx) => {
+const item = document.createElement('div');
+item.className = 'faq-item';
+item.dataset.idx = idx;
+code
+Code
+const header = document.createElement('div');
+header.className = 'faq-header';
+header.setAttribute('role', 'button');
+header.setAttribute('tabindex', '0');
+header.setAttribute('aria-expanded', 'false');
+header.setAttribute('aria-controls', 'faq-answer-' + faq.id);
 
-  /* ============================================================
-     GUARD: sezione attiva?
-  ============================================================ */
-  const section = document.getElementById('section-faq');
-  if (!section) return;
+const question = document.createElement('span');
+question.className = 'faq-question';
+question.textContent = faq.domanda;
 
-  const faqDati =[];
-  for (let i = 1; i <= 10; i++) {
-    if (!isOn(cfg['faq_' + i + '_attiva'])) continue;
-    const domanda = (cfg['faq_' + i + '_domanda'] || '').trim();
-    const risposta = (cfg['faq_' + i + '_risposta'] || '').trim();
-    if (!domanda) continue;
-    faqDati.push({ id: i, domanda, risposta });
-  }
+const indicator = document.createElement('span');
+indicator.className       = 'faq-indicator';
+indicator.textContent     = '+';
+indicator.setAttribute('aria-hidden', 'true');
 
-  if (faqDati.length === 0) {
-    section.style.display = 'none';
-    return;
-  }
+header.appendChild(question);
+header.appendChild(indicator);
 
-  section.style.display = '';
+const body = document.createElement('div');
+body.className = 'faq-body';
+body.id = 'faq-answer-' + faq.id;
 
-  const headlineEl = document.getElementById('faq-headline');
-  const introEl    = document.getElementById('faq-intro-text');
+const answer = document.createElement('div');
+answer.className = 'faq-answer';
+if (faq.risposta) {
+  answer.textContent = faq.risposta;
+} else {
+  answer.textContent = 'Contattaci per maggiori informazioni.';
+  answer.style.color = 'var(--black-mid)';
+  answer.style.fontStyle = 'italic';
+}
 
-  if (introEl) {
-    introEl.style.display = 'none';
-  }
+body.appendChild(answer);
+item.appendChild(header);
+item.appendChild(body);
+listEl.appendChild(item);
 
-  const listEl = document.getElementById('faq-list');
-  if (!listEl) return;
+function toggleItem(ev) {
+  if (ev) ev.preventDefault();
+  const isOpen = item.classList.contains('is-open');
 
-  listEl.innerHTML = '';
+  listEl.querySelectorAll('.faq-item.is-open').forEach(openItem => {
+    if (openItem !== item) {
+      openItem.classList.remove('is-open');
+      openItem.querySelector('.faq-header').setAttribute('aria-expanded', 'false');
+    }
+  });
 
-  faqDati.forEach((faq, idx) => {
-    const item = document.createElement('div');
-    item.className = 'faq-item';
-    item.dataset.idx = idx;
-
-    const header = document.createElement('div');
-    header.className = 'faq-header';
-    header.setAttribute('role', 'button');
-    header.setAttribute('tabindex', '0');
+  if (isOpen) {
+    item.classList.remove('is-open');
     header.setAttribute('aria-expanded', 'false');
-    header.setAttribute('aria-controls', 'faq-answer-' + faq.id);
-
-    const question = document.createElement('span');
-    question.className = 'faq-question';
-    question.textContent = faq.domanda;
-
-    const indicator = document.createElement('span');
-    indicator.className       = 'faq-indicator';
-    indicator.textContent     = '+';
-    indicator.setAttribute('aria-hidden', 'true');
-
-    header.appendChild(question);
-    header.appendChild(indicator);
-
-    const body = document.createElement('div');
-    body.className = 'faq-body';
-    body.id = 'faq-answer-' + faq.id;
-
-    const answer = document.createElement('div');
-    answer.className = 'faq-answer';
-    if (faq.risposta) {
-      answer.textContent = faq.risposta;
-    } else {
-      answer.textContent = 'Contattaci per maggiori informazioni.';
-      answer.style.color = 'var(--black-mid)';
-      answer.style.fontStyle = 'italic';
-    }
-
-    body.appendChild(answer);
-    item.appendChild(header);
-    item.appendChild(body);
-    listEl.appendChild(item);
-
-    function toggleItem(ev) {
-      if (ev) ev.preventDefault();
-      const isOpen = item.classList.contains('is-open');
-
-      listEl.querySelectorAll('.faq-item.is-open').forEach(openItem => {
-        if (openItem !== item) {
-          openItem.classList.remove('is-open');
-          openItem.querySelector('.faq-header').setAttribute('aria-expanded', 'false');
-        }
-      });
-
-      if (isOpen) {
-        item.classList.remove('is-open');
-        header.setAttribute('aria-expanded', 'false');
-      } else {
-        item.classList.add('is-open');
-        header.setAttribute('aria-expanded', 'true');
-      }
-    }
-
-    header.addEventListener('click', toggleItem);
-    header.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter' || ev.key === ' ') {
-        ev.preventDefault();
-        toggleItem();
-      }
-    });
-  });
-
-  if (section.style.display !== 'none') {
-    const ioFaq = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-in-view');
-          ioFaq.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0 });
-    ioFaq.observe(section);
-  }
-
-}); // fine configLoaded faq
-
-document.addEventListener('configLoaded', (e) => {
-  const cfg = e.detail;
-
-  /* ============================================================
-     FOOTER — render dati
-  ============================================================ */
-  const footerSection = document.getElementById('section-footer');
-  if (!footerSection) return;
-
-  const headlineWrap = document.getElementById('footer-headline-wrap');
-  if (headlineWrap) {
-    headlineWrap.classList.add('js-clip-init');
-
-    const ioHeadline = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-revealed');
-          ioHeadline.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.3 });
-    ioHeadline.observe(headlineWrap);
-  }
-
-  const infoBody = document.getElementById('footer-info-body');
-  if (infoBody) {
-    const parti =[];
-    if (cfg.footer_indirizzo)  parti.push(cfg.footer_indirizzo);
-    if (cfg.footer_orari)      parti.push(cfg.footer_orari);
-    if (cfg.footer_telefono)   parti.push('<a href="tel:' + sanitizeTel(cfg.footer_telefono) + '">' + cfg.footer_telefono + '</a>');
-    if (cfg.footer_email)      parti.push('<a href="mailto:' + cfg.footer_email + '">' + cfg.footer_email + '</a>');
-
-    if (parti.length === 0) {
-      infoBody.style.display = 'none';
-    } else {
-      infoBody.innerHTML = parti.map(p => '<p>' + p + '</p>').join('');
-      infoBody.style.display = '';
-    }
-  }
-
-  const ctaPill = document.getElementById('footer-cta-pill');
-  const ctaText = document.getElementById('footer-cta-text');
-  if (ctaPill && ctaText) {
-    const tipo     = (cfg.footer_cta_tipo  || 'WHATSAPP').trim().toUpperCase();
-    const testo    = (cfg.footer_cta_testo || 'Scrivici ora').trim();
-    const contatto = (cfg.footer_whatsapp  || cfg.footer_telefono || '').trim();
-
-    if (!contatto) {
-      ctaPill.style.display = 'none';
-    } else {
-      ctaText.textContent = testo;
-      if (tipo === 'WHATSAPP') {
-        ctaPill.href   = 'https://wa.me/' + sanitizeTel(contatto);
-        ctaPill.target = '_blank';
-        ctaPill.rel    = 'noopener noreferrer';
-      } else if (tipo === 'TELEFONO') {
-        ctaPill.href = 'tel:' + sanitizeTel(contatto);
-      }
-      ctaPill.style.display = 'inline-flex';
-
-      if (typeof initMagneticCta === 'function') {
-        initMagneticCta(ctaPill, 14, 28);
-      }
-    }
-  }
-
-  const mapWrap   = document.getElementById('footer-map-wrap');
-  const extraWrap = document.getElementById('footer-extra');
-
-  if (isOn(cfg.footer_mappa_attiva) && cfg.footer_mappa_url) {
-    if (mapWrap) {
-      mapWrap.style.display = '';
-      const iframe = document.getElementById('footer-map-iframe');
-      if (iframe) {
-        let finalUrl = sanitizeUrl(cfg.footer_mappa_url);
-        if (finalUrl.includes('maps.google') && !finalUrl.includes('output=embed') && !finalUrl.includes('/embed/')) {
-          finalUrl = finalUrl.replace('/?q=', '/maps?q='); 
-          finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'output=embed';
-        }
-        iframe.src = finalUrl;
-      }
-    }
-    if (extraWrap) extraWrap.style.display = 'none';
   } else {
-    if (mapWrap)   mapWrap.style.display   = 'none';
-    if (extraWrap) {
-      extraWrap.style.display = 'flex';
-      const orariEl = document.getElementById('footer-extra-orari');
-      const contattiEl = document.getElementById('footer-extra-contatti');
-      if (orariEl)     orariEl.textContent     = cfg.footer_orari     || '';
-      if (contattiEl)  contattiEl.textContent  = cfg.footer_telefono  || '';
+    item.classList.add('is-open');
+    header.setAttribute('aria-expanded', 'true');
+  }
+}
+
+header.addEventListener('click', toggleItem);
+header.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' || ev.key === ' ') {
+    ev.preventDefault();
+    toggleItem();
+  }
+});
+});
+if (section.style.display !== 'none') {
+const ioFaq = new IntersectionObserver((entries) => {
+entries.forEach(entry => {
+if (entry.isIntersecting) {
+entry.target.classList.add('is-in-view');
+ioFaq.unobserve(entry.target);
+}
+});
+}, { threshold: 0 });
+ioFaq.observe(section);
+}
+}); // fine configLoaded faq
+document.addEventListener('configLoaded', (e) => {
+const cfg = e.detail;
+/* ============================================================
+FOOTER — render dati
+============================================================ */
+const footerSection = document.getElementById('section-footer');
+if (!footerSection) return;
+const headlineWrap = document.getElementById('footer-headline-wrap');
+if (headlineWrap) {
+headlineWrap.classList.add('js-clip-init');
+code
+Code
+const ioHeadline = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('is-revealed');
+      ioHeadline.unobserve(entry.target);
     }
-  }
-
-  const wordmarkEl = document.getElementById('footer-wordmark-text');
-  if (wordmarkEl) {
-    wordmarkEl.textContent = cfg.footer_nome || cfg.schema_nome || '';
-  }
-
-  const taglineEl = document.getElementById('footer-wordmark-tagline');
-  if (taglineEl) {
-    const tag = (cfg.hero_sottotitolo || '').trim();
-    if (tag) {
-      taglineEl.textContent = tag;
-      taglineEl.style.display = '';
-    } else {
-      taglineEl.style.display = 'none';
-    }
-  }
-
-  const copySx = document.getElementById('footer-copyright-sx');
-  if (copySx) {
-    const anno   = new Date().getFullYear();
-    const nome   = cfg.footer_nome || cfg.schema_nome || 'Attività';
-    copySx.textContent = '© ' + anno + ' ' + nome;
-  }
-
-  const creditsEl = document.getElementById('footer-credits');
-  if (creditsEl) {
-    if (isOn(cfg.crediti_ompage_footer)) {
-      creditsEl.style.display = '';
-    } else {
-      creditsEl.style.display = 'none';
-    }
-  }
-
-  /* ============================================================
-     COOKIE BANNER
-  ============================================================ */
-  const cookieBanner = document.getElementById('cookie-banner');
-  const cookieAccept = document.getElementById('cookie-accept');
-  const cookieNec    = document.getElementById('cookie-necessary');
-
-  function hideCookieBanner() {
-    if (cookieBanner) cookieBanner.style.display = 'none';
-    localStorage.setItem('ompage_cookie_consent', '1');
-  }
-
-  if (cookieAccept) cookieAccept.addEventListener('click', hideCookieBanner);
-  if (cookieNec)    cookieNec.addEventListener('click',    hideCookieBanner);
-
-  if (cookieBanner && localStorage.getItem('ompage_cookie_consent') !== '1') {
-    cookieBanner.style.display = 'flex';
-  }
-
-  /* ============================================================
-     MODALI POLICY
-  ============================================================ */
-  document.querySelectorAll('[data-modal]').forEach(trigger => {
-    trigger.addEventListener('click', () => {
-      const modalId = trigger.dataset.modal;
-      const modal   = document.getElementById(modalId);
-      if (modal) {
-        modal.classList.add('is-open');
-        document.body.style.overflow = 'hidden';
-      }
-    });
   });
-
-  document.querySelectorAll('[data-close-modal]').forEach(btn => {
-    btn.addEventListener('click', closeAllModals);
-  });
-
-  document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', (ev) => {
-      if (ev.target === overlay) closeAllModals();
-    });
-  });
-
-  function closeAllModals() {
-    document.querySelectorAll('.modal-overlay.is-open').forEach(m => {
-      m.classList.remove('is-open');
-    });
-    document.body.style.overflow = '';
+}, { threshold: 0.3 });
+ioHeadline.observe(headlineWrap);
+}
+const infoBody = document.getElementById('footer-info-body');
+if (infoBody) {
+const parti =[];
+if (cfg.footer_indirizzo) parti.push(cfg.footer_indirizzo);
+if (cfg.footer_orari) parti.push(cfg.footer_orari);
+if (cfg.footer_telefono) parti.push('<a href="tel:' + sanitizeTel(cfg.footer_telefono) + '">' + cfg.footer_telefono + '</a>');
+if (cfg.footer_email) parti.push('<a href="mailto:' + cfg.footer_email + '">' + cfg.footer_email + '</a>');
+code
+Code
+if (parti.length === 0) {
+  infoBody.style.display = 'none';
+} else {
+  infoBody.innerHTML = parti.map(p => '<p>' + p + '</p>').join('');
+  infoBody.style.display = '';
+}
+}
+const ctaPill = document.getElementById('footer-cta-pill');
+const ctaText = document.getElementById('footer-cta-text');
+if (ctaPill && ctaText) {
+const tipo = (cfg.footer_cta_tipo || 'WHATSAPP').trim().toUpperCase();
+const testo = (cfg.footer_cta_testo || 'Scrivici ora').trim();
+const contatto = (cfg.footer_whatsapp || cfg.footer_telefono || '').trim();
+code
+Code
+if (!contatto) {
+  ctaPill.style.display = 'none';
+} else {
+  ctaText.textContent = testo;
+  if (tipo === 'WHATSAPP') {
+    ctaPill.href   = 'https://wa.me/' + sanitizeTel(contatto);
+    ctaPill.target = '_blank';
+    ctaPill.rel    = 'noopener noreferrer';
+  } else if (tipo === 'TELEFONO') {
+    ctaPill.href = 'tel:' + sanitizeTel(contatto);
   }
+  ctaPill.style.display = 'inline-flex';
 
-  document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape') closeAllModals();
-  });
-
-  if (footerSection) {
-    const ioFooter = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-in-view');
-          ioFooter.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0 });
-    ioFooter.observe(footerSection);
+  if (typeof initMagneticCta === 'function') {
+    initMagneticCta(ctaPill, 14, 28);
   }
-
+}
+}
+const mapWrap = document.getElementById('footer-map-wrap');
+const extraWrap = document.getElementById('footer-extra');
+if (isOn(cfg.footer_mappa_attiva) && cfg.footer_mappa_url) {
+if (mapWrap) {
+mapWrap.style.display = '';
+const iframe = document.getElementById('footer-map-iframe');
+if (iframe) {
+let finalUrl = sanitizeUrl(cfg.footer_mappa_url);
+if (finalUrl.includes('maps.google') && !finalUrl.includes('output=embed') && !finalUrl.includes('/embed/')) {
+finalUrl = finalUrl.replace('/?q=', '/maps?q=');
+finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'output=embed';
+}
+iframe.src = finalUrl;
+}
+}
+if (extraWrap) extraWrap.style.display = 'none';
+} else {
+if (mapWrap) mapWrap.style.display = 'none';
+if (extraWrap) {
+extraWrap.style.display = 'flex';
+const orariEl = document.getElementById('footer-extra-orari');
+const contattiEl = document.getElementById('footer-extra-contatti');
+if (orariEl) orariEl.textContent = cfg.footer_orari || '';
+if (contattiEl) contattiEl.textContent = cfg.footer_telefono || '';
+}
+}
+const wordmarkEl = document.getElementById('footer-wordmark-text');
+if (wordmarkEl) {
+wordmarkEl.textContent = cfg.footer_nome || cfg.navbar_logo_testo || cfg.seo_titolo || '';
+}
+const taglineEl = document.getElementById('footer-wordmark-tagline');
+if (taglineEl) {
+const tag = (cfg.hero_sottotitolo || '').trim();
+if (tag) {
+taglineEl.textContent = tag;
+taglineEl.style.display = '';
+} else {
+taglineEl.style.display = 'none';
+}
+}
+const copySx = document.getElementById('footer-copyright-sx');
+if (copySx) {
+const anno = new Date().getFullYear();
+const nome = cfg.footer_nome || cfg.navbar_logo_testo || cfg.seo_titolo || 'Attività';
+copySx.textContent = '© ' + anno + ' ' + nome;
+}
+const creditsEl = document.getElementById('footer-credits');
+if (creditsEl) {
+if (isOn(cfg.crediti_ompage_footer)) {
+creditsEl.style.display = '';
+} else {
+creditsEl.style.display = 'none';
+}
+}
+/* ============================================================
+COOKIE BANNER
+============================================================ */
+const cookieBanner = document.getElementById('cookie-banner');
+const cookieAccept = document.getElementById('cookie-accept');
+const cookieNec = document.getElementById('cookie-necessary');
+function hideCookieBanner() {
+if (cookieBanner) cookieBanner.style.display = 'none';
+localStorage.setItem('ompage_cookie_consent', '1');
+}
+if (cookieAccept) cookieAccept.addEventListener('click', hideCookieBanner);
+if (cookieNec) cookieNec.addEventListener('click', hideCookieBanner);
+if (cookieBanner && localStorage.getItem('ompage_cookie_consent') !== '1') {
+cookieBanner.style.display = 'flex';
+}
+/* ============================================================
+MODALI POLICY
+============================================================ */
+document.querySelectorAll('[data-modal]').forEach(trigger => {
+trigger.addEventListener('click', () => {
+const modalId = trigger.dataset.modal;
+const modal = document.getElementById(modalId);
+if (modal) {
+modal.classList.add('is-open');
+document.body.style.overflow = 'hidden';
+}
+});
+});
+document.querySelectorAll('[data-close-modal]').forEach(btn => {
+btn.addEventListener('click', closeAllModals);
+});
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+overlay.addEventListener('click', (ev) => {
+if (ev.target === overlay) closeAllModals();
+});
+});
+function closeAllModals() {
+document.querySelectorAll('.modal-overlay.is-open').forEach(m => {
+m.classList.remove('is-open');
+});
+document.body.style.overflow = '';
+}
+document.addEventListener('keydown', (ev) => {
+if (ev.key === 'Escape') closeAllModals();
+});
+if (footerSection) {
+const ioFooter = new IntersectionObserver((entries) => {
+entries.forEach(entry => {
+if (entry.isIntersecting) {
+entry.target.classList.add('is-in-view');
+ioFooter.unobserve(entry.target);
+}
+});
+}, { threshold: 0 });
+ioFooter.observe(footerSection);
+}
 }); // fine configLoaded footer
-
-  </script>
-
+</script>
 </body>
 </html>

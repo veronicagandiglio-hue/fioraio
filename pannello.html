@@ -36,6 +36,8 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;ba
 .nav-item.active{background:var(--sidebar-active-bg);color:#fff;border-left-color:var(--accent)}
 .nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
 .nav-label{flex:1}
+.nav-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;background:var(--success);color:#fff}
+.nav-badge.off{background:var(--text-key)}
 .sidebar-footer{padding:14px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:8px}
 
 /* MAIN */
@@ -82,12 +84,13 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;ba
 .tv{font-size:12px;font-weight:700;color:var(--text-key)}
 .tv.on{color:var(--accent)}
 
-/* IMG PATH / PDF PATH */
-.iw{display:flex;gap:12px;align-items:center}
-.ithumb{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0}
-.ipholder{width:64px;height:64px;border-radius:6px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text-key);flex-shrink:0;background:var(--bg)}
-.pdf-icon-holder{width:64px;height:64px;border-radius:6px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;background:var(--bg)}
-.pdf-icon-holder.has-file{background:rgba(79,70,229,.1);border-color:var(--accent);color:var(--accent)}
+/* IMG PATH */
+.iw{display:flex;gap:6px;align-items:center}
+.ithumb{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0}
+.ipholder{width:48px;height:48px;border-radius:6px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-key);flex-shrink:0;background:var(--bg)}
+.file-pill{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text-secondary);font-size:12px;min-height:40px}
+.file-pill-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.field-help{font-size:12px;color:var(--text-secondary);margin-top:4px}
 
 /* DATE */
 .dr{font-size:12px;color:var(--text-secondary);margin-top:3px}
@@ -318,8 +321,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;ba
 // STATE
 // ════════════════════════════════════════════════════════════
 let CFG = {};
-let ALL_ORIG_KEYS =[]; // Mantiene tutti per il salvataggio
-let VISIBLE_KEYS =[];  // Mostrati nell'interfaccia
+let ORIG_KEYS = [];
 let GH_SHA = null;
 let IS_DIRTY = false;
 
@@ -330,7 +332,7 @@ const LS = {
   set token(v) { localStorage.setItem('ompage_token', v) },
   set owner(v) { localStorage.setItem('ompage_owner', v) },
   set repo(v)  { localStorage.setItem('ompage_repo',  v) },
-  clear()      {['ompage_token','ompage_owner','ompage_repo'].forEach(k => localStorage.removeItem(k)) },
+  clear()      { ['ompage_token','ompage_owner','ompage_repo'].forEach(k => localStorage.removeItem(k)) },
   get hasAll() { return !!(this.token && this.owner && this.repo) }
 };
 
@@ -398,65 +400,116 @@ async function ghPut(jsonObj) {
 }
 
 // ════════════════════════════════════════════════════════════
-// GITHUB FILE UPLOAD (Immagini & PDF)
+// GITHUB FILE UPLOAD
 // ════════════════════════════════════════════════════════════
-async function uploadToGitHub(event, key, isPdf) {
+const UPLOAD_RULES = {
+  image: {
+    label: 'immagine',
+    accept: ['image/jpeg', 'image/png', 'image/webp'],
+    exts: ['jpg', 'jpeg', 'png', 'webp'],
+    max: 5 * 1024 * 1024
+  },
+  pdf: {
+    label: 'PDF',
+    accept: ['application/pdf'],
+    exts: ['pdf'],
+    max: 10 * 1024 * 1024
+  }
+};
+
+function uploadToGitHub(event, key) {
+  uploadFileToGitHub(event, key, 'image');
+}
+
+function uploadPdfToGitHub(event, key) {
+  uploadFileToGitHub(event, key, 'pdf');
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = ev => resolve(ev.target.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function uploadFileName(key, file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `${key}_${Date.now()}.${ext}`;
+}
+
+async function uploadFileToGitHub(event, key, type) {
   const file = event.target.files[0];
   if (!file) return;
 
+  const rule = UPLOAD_RULES[type];
   const statusEl = document.getElementById(`upload_status_${key}`);
-  statusEl.style.display = 'block';
-  statusEl.textContent = '⏳ Compressione e caricamento su server...';
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const okMime = rule.accept.includes(file.type);
+  const okExt = rule.exts.includes(ext);
 
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const base64Content = ev.target.result.split(',')[1];
-    
-    // Genera nome file sicuro
-    const ext = file.name.split('.').pop().toLowerCase();
-    const safeName = key + '_' + Date.now() + '.' + ext;
-    const filePath = `assets/${safeName}`; 
-    const apiUrl = `${GH_BASE}/repos/${LS.owner}/${LS.repo}/contents/${filePath}`;
+  if (!okMime && !okExt) {
+    flash(`❌ File non valido. Carica un ${rule.label} nel formato corretto.`, 'error', 6000);
+    event.target.value = '';
+    return;
+  }
 
-    try {
-      const body = {
-        message: `Upload file: ${key}`,
-        content: base64Content
-      };
+  if (file.size > rule.max) {
+    const mb = Math.round(rule.max / 1024 / 1024);
+    flash(`❌ File troppo grande. Dimensione massima: ${mb} MB.`, 'error', 6000);
+    event.target.value = '';
+    return;
+  }
 
-      const res = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: ghHeaders(),
-        body: JSON.stringify(body)
-      });
+  if (statusEl) {
+    statusEl.style.color = 'var(--accent)';
+    statusEl.style.display = 'block';
+    statusEl.textContent = `⏳ Caricamento ${rule.label} su GitHub...`;
+  }
 
-      if (!res.ok) throw new Error('Errore API GitHub');
+  const safeName = uploadFileName(key, file);
+  const filePath = `assets/${safeName}`;
+  const apiUrl = `${GH_BASE}/repos/${LS.owner}/${LS.repo}/contents/${filePath}`;
 
-      setField(key, filePath);
-      
-      const inp = document.getElementById(`f_${key}`);
-      if(inp) inp.value = filePath;
-      
-      if(isPdf) {
-        document.getElementById(`pname_${key}`).textContent = filePath;
-        document.getElementById(`iph_${key}`).classList.add('has-file');
-        document.getElementById(`iph_${key}`).textContent = '📄';
-      } else {
-        updThumb(key);
-      }
-      
-      statusEl.textContent = '✅ File caricato con successo!';
-      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+  try {
+    const content = await fileToBase64(file);
+    const res = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: ghHeaders(),
+      body: JSON.stringify({
+        message: `Upload ${rule.label}: ${key}`,
+        content
+      })
+    });
 
-    } catch (err) {
-      statusEl.textContent = '❌ Errore nel caricamento. Riprova.';
-      statusEl.style.color = 'var(--error)';
-      console.error(err);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || 'Errore API GitHub');
     }
-  };
-  
-  reader.readAsDataURL(file);
+
+    setField(key, filePath);
+    const input = document.getElementById(`f_${key}`);
+    if (input) input.value = filePath;
+    if (type === 'image') updThumb(key);
+    if (type === 'pdf') updFileLabel(key);
+
+    if (statusEl) {
+      statusEl.textContent = `✅ ${rule.label} caricato con successo.`;
+      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = `❌ Errore nel caricamento ${rule.label}. Riprova.`;
+      statusEl.style.color = 'var(--error)';
+    }
+    console.error(err);
+  } finally {
+    event.target.value = '';
+  }
 }
+
+
 
 // ════════════════════════════════════════════════════════════
 // INIT
@@ -466,15 +519,7 @@ async function init() {
   showLoading('Caricamento dal tuo sito GitHub...');
   try {
     CFG = await ghGet();
-    ALL_ORIG_KEYS = Object.keys(CFG);
-    
-    // Nascondiamo placeholder, schema e watermark dal pannello
-    VISIBLE_KEYS = ALL_ORIG_KEYS.filter(k => 
-      !k.includes('placeholder') && 
-      !k.includes('schema_') && 
-      k !== 'sito_in_bozza_watermark'
-    );
-
+    ORIG_KEYS = Object.keys(CFG);
     hideLoading();
     showApp();
     buildUI();
@@ -539,12 +584,7 @@ async function doSetup() {
   LS.token = token; LS.owner = owner; LS.repo = repo;
   try {
     CFG = await ghGet();
-    ALL_ORIG_KEYS = Object.keys(CFG);
-    VISIBLE_KEYS = ALL_ORIG_KEYS.filter(k => 
-      !k.includes('placeholder') && 
-      !k.includes('schema_') && 
-      k !== 'sito_in_bozza_watermark'
-    );
+    ORIG_KEYS = Object.keys(CFG);
     document.getElementById('setup-screen').style.display = 'none';
     showApp(); buildUI();
   } catch(e) {
@@ -584,9 +624,7 @@ async function saveSettings() {
   closeSettings();
   showLoading('Riconnessione...');
   try {
-    CFG = await ghGet(); 
-    ALL_ORIG_KEYS = Object.keys(CFG);
-    VISIBLE_KEYS = ALL_ORIG_KEYS.filter(k => !k.includes('placeholder') && !k.includes('schema_') && k !== 'sito_in_bozza_watermark');
+    CFG = await ghGet(); ORIG_KEYS = Object.keys(CFG);
     hideLoading(); showApp(); buildUI();
     flash('✅ Connessione aggiornata.', 'success');
   } catch(e) { hideLoading(); showSetup('Errore con le nuove credenziali: ' + e.message); }
@@ -602,12 +640,10 @@ function disconnect() {
 // ════════════════════════════════════════════════════════════
 async function saveToGitHub() {
   if (!validate()) return;
+  syncDerivedFields();
   fixUrlsTels();
   const ordered = {};
-  
-  // Usiamo ALL_ORIG_KEYS per mantenere TUTTI i dati (anche i placeholder nascosti)
-  ALL_ORIG_KEYS.forEach(k => { ordered[k] = CFG[k]; });
-  
+  ORIG_KEYS.forEach(k => { ordered[k] = CFG[k]; });
   const btn = document.getElementById('btn-save');
   btn.textContent = '⏳ Salvataggio in corso...'; btn.disabled = true;
   try {
@@ -628,9 +664,9 @@ async function saveToGitHub() {
 // ════════════════════════════════════════════════════════════
 // SECTIONS
 // ════════════════════════════════════════════════════════════
-const SECTIONS =[
+const SECTIONS = [
   {id:'impostazioni',icon:'⚙️',label:'Impostazioni'},
-  {id:'seo',icon:'🔍',label:'SEO & Social'},
+  {id:'seo',icon:'🔍',label:'SEO & Metadati'},
   {id:'navbar',icon:'🧭',label:'Navbar'},
   {id:'promozioni',icon:'📣',label:'Promozioni'},
   {id:'hero',icon:'🏠',label:'Hero'},
@@ -644,12 +680,17 @@ const SECTIONS =[
 ];
 
 const LMAP = {
-  crediti_ompage_footer:'Mostra crediti',
-  tema_tipografico:'Stile Tipografico',
-  tema_palette:'Palette Colori Sito',
+  sito_in_bozza_watermark:'Sito in bozza (watermark)',
+  crediti_ompage_footer:'Mostra crediti Ompage',
+  tema_tipografico:'Font pairing',
+  tema_palette:'Palette colori',
   seo_titolo:'Titolo pagina (SEO)',
   seo_descrizione:'Descrizione pagina (SEO)',
-  og_immagine:'Immagine social (Condivisione)',
+  og_immagine:'Immagine anteprima social',
+  schema_nome:'Nome attività',
+  schema_indirizzo:'Indirizzo',
+  schema_telefono:'Telefono',
+  schema_orari:'Orari apertura',
   navbar_logo_tipo:'Tipo logo navbar',
   navbar_logo_testo:'Testo logo',
   navbar_logo_immagine:'Immagine logo',
@@ -673,6 +714,7 @@ const LMAP = {
   popup_cta_contatto:'Contatto/URL popup',
   hero_layout:'Layout hero',
   hero_foto:'Foto hero',
+  hero_placeholder:'Placeholder foto hero',
   hero_titolo:'Titolo principale',
   hero_sottotitolo:'Sottotitolo',
   hero_cta_testo:'Testo CTA',
@@ -682,39 +724,54 @@ const LMAP = {
   chi_siamo_layout:'Layout',
   chi_siamo_titolo:'Titolo',
   chi_siamo_testo:'Testo',
-  chi_siamo_foto:'Foto principale',
-  chi_siamo_foto_secondaria:'Foto secondaria',
+  chi_siamo_foto:'Foto',
+  chi_siamo_placeholder:'Placeholder foto',
   servizi_attivi:'Sezione attiva',
   servizi_layout:'Layout',
   servizi_titolo:'Titolo sezione',
   pdf_menu_attivo:'PDF listino attivo',
   pdf_menu_testo_bottone:'Testo bottone PDF',
-  pdf_menu_url:'File PDF Listino',
+  pdf_menu_url:'PDF listino',
   galleria_attiva:'Galleria attiva',
   galleria_titolo:'Titolo galleria',
   galleria_estesa_attiva:'Galleria estesa attiva',
   galleria_estesa_titolo:'Titolo galleria estesa',
-  galleria_estesa_testo_bottone:'Testo bottone estensione',
+  galleria_estesa_testo_bottone:'Testo bottone',
   recensioni_attive:'Sezione attiva',
   recensioni_titolo:'Titolo sezione',
-  footer_nome:'Nome attività / Ragione Sociale',
-  footer_indirizzo:'Indirizzo completo',
-  footer_telefono:'Telefono principale',
+  footer_nome:'Nome attività',
+  footer_indirizzo:'Indirizzo',
+  footer_telefono:'Telefono',
   footer_whatsapp:'WhatsApp',
   footer_email:'Email',
-  footer_cta_tipo:'Tipo azione pulsante',
-  footer_cta_testo:'Testo pulsante finale',
-  footer_mappa_attiva:'Mappa di Google attiva',
-  footer_mappa_url:'Link Google Maps',
+  footer_cta_tipo:'Tipo CTA',
+  footer_cta_testo:'Testo bottone',
+  footer_mappa_attiva:'Mappa attiva',
+  footer_mappa_url:'URL mappa',
   footer_orari:'Orari',
   footer_instagram:'Instagram',
   footer_facebook:'Facebook',
 };
 
-const SMAP={nome:'Nome',testo:'Testo',descrizione:'Descrizione',foto:'Foto',
+const SMAP={nome:'Nome',testo:'Testo',descrizione:'Descrizione',foto:'Foto',placeholder:'Placeholder',
   prezzo:'Prezzo',attivo:'Attivo',attiva:'Attiva',stelle:'Stelle',domanda:'Domanda',risposta:'Risposta',
-  url:'Immagine',didascalia:'Didascalia',titolo:'Titolo',tipo:'Tipo',contatto:'Contatto',layout:'Layout',
+  url:'URL',didascalia:'Didascalia',titolo:'Titolo',tipo:'Tipo',contatto:'Contatto',layout:'Layout',
   scadenza:'Scadenza',cta_testo:'Testo CTA',cta_tipo:'Tipo CTA',cta_contatto:'Contatto CTA'};
+
+const ADMIN_ONLY_KEYS = new Set([
+  'sito_in_bozza_watermark'
+]);
+
+const DERIVED_KEYS = new Set([
+  'schema_nome',
+  'schema_indirizzo',
+  'schema_telefono',
+  'schema_orari'
+]);
+
+function isHiddenKey(key) {
+  return ADMIN_ONLY_KEYS.has(key) || DERIVED_KEYS.has(key) || key.includes('_placeholder');
+}
 
 function lbl(key){
   if(LMAP[key])return LMAP[key];
@@ -722,7 +779,7 @@ function lbl(key){
   if(m=key.match(/^servizio_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Servizio '+m[1];
   if(m=key.match(/^recensione_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Recensione '+m[1];
   if(m=key.match(/^foto_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Foto '+m[1];
-  if(m=key.match(/^foto_estesa_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Foto Estesa '+m[1];
+  if(m=key.match(/^foto_estesa_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Foto estesa '+m[1];
   if(m=key.match(/^faq_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — FAQ '+m[1];
   if(m=key.match(/^chi_siamo_passo_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Passo '+m[1];
   return uc(key.replace(/_/g,' '));
@@ -730,7 +787,7 @@ function lbl(key){
 function uc(s){return s.replace(/\b\w/g,c=>c.toUpperCase())}
 
 const SELOPTS={
-  tema_tipografico:['LUSSO_SERIF','MODERNO_TECH','CLASSICO'],
+  tema_tipografico:['LUSSO_SERIF','MODERNO_TECH','CLASSICO','EDITORIALE_MODERNO'],
   tema_palette:['CHIARO_MINIMALE','DARK_ELEGANTE','NATURA_PASTELLO','ROMANTICO'],
   hero_layout:['CON_FOTO_SFONDO','SENZA_FOTO'],
   chi_siamo_layout:['FOTO_E_TESTO','TRE_PASSI','SOLO_TESTO'],
@@ -742,24 +799,101 @@ const SELOPTS={
   popup_cta_tipo:['WHATSAPP','TELEFONO','URL'],
 };
 
+const OPTION_LABELS = {
+  tema_tipografico: {
+    LUSSO_SERIF: 'Elegante serif — lusso artigianale',
+    MODERNO_TECH: 'Moderno pulito — premium contemporaneo',
+    CLASSICO: 'Classico editoriale — raffinato e leggibile',
+    EDITORIALE_MODERNO: 'Editoriale moderno — boutique creativa'
+  },
+  tema_palette: {
+    CHIARO_MINIMALE: 'Chiaro minimale — bianco, nero, sabbia',
+    DARK_ELEGANTE: 'Scuro elegante — nero caldo e oro',
+    NATURA_PASTELLO: 'Natura pastello — verde salvia',
+    ROMANTICO: 'Romantico — rosa cipria e vinaccia'
+  }
+};
+
+const MAX_LENGTHS = [
+  ['seo_titolo', 60],
+  ['seo_descrizione', 155],
+  ['navbar_logo_testo', 55],
+  [/^navbar_voce_/, 18],
+  ['barra_testo', 120],
+  ['barra_cta_testo', 28],
+  ['popup_testo', 180],
+  ['popup_cta_testo', 28],
+  ['hero_titolo', 72],
+  ['hero_sottotitolo', 150],
+  ['hero_cta_testo', 28],
+  ['chi_siamo_titolo', 72],
+  ['chi_siamo_testo', 650],
+  [/^chi_siamo_passo_\d+_titolo$/, 55],
+  [/^chi_siamo_passo_\d+_testo$/, 220],
+  ['servizi_titolo', 72],
+  [/^servizio_\d+_nome$/, 45],
+  [/^servizio_\d+_descrizione$/, 220],
+  [/^servizio_\d+_prezzo$/, 35],
+  ['pdf_menu_testo_bottone', 36],
+  ['galleria_titolo', 72],
+  ['galleria_estesa_titolo', 72],
+  ['galleria_estesa_testo_bottone', 36],
+  [/^foto_\d+_didascalia$/, 85],
+  ['recensioni_titolo', 72],
+  [/^recensione_\d+_nome$/, 45],
+  [/^recensione_\d+_testo$/, 280],
+  [/^faq_\d+_domanda$/, 110],
+  [/^faq_\d+_risposta$/, 360],
+  ['footer_nome', 45],
+  ['footer_indirizzo', 110],
+  ['footer_cta_testo', 28],
+  ['footer_orari', 140]
+];
+
+function optionLabel(key, value) {
+  return OPTION_LABELS[key]?.[value] || value.replace(/_/g, ' ');
+}
+
+function maxLen(key) {
+  for (const [rule, limit] of MAX_LENGTHS) {
+    if (typeof rule === 'string' && rule === key) return limit;
+    if (rule instanceof RegExp && rule.test(key)) return limit;
+  }
+  return 0;
+}
+
+function isImageField(key) {
+  return key === 'og_immagine' ||
+    key.includes('_foto') ||
+    key.includes('_immagine') ||
+    key.includes('sfondo_astratto') ||
+    /^foto_\d+_url$/.test(key) ||
+    /^foto_estesa_\d+_url$/.test(key);
+}
+
+function isPdfField(key) {
+  return key === 'pdf_menu_url';
+}
+
 function ftype(key){
-  if(key === 'pdf_menu_url') return 'pdfpath';
-  if(key.includes('_foto') || key.includes('_immagine') || key.includes('sfondo_astratto') || (key.includes('foto_') && key.includes('_url'))) return 'imgpath';
-  
+  if(isPdfField(key))return'pdfpath';
+  if(isImageField(key))return'imgpath';
   if(SELOPTS[key]||key.startsWith('tema_'))return'select';
-  
+
   const v=CFG[key];
   if(v==='SI'||v==='NO'||key.endsWith('_attivo')||key.endsWith('_attiva')||key.endsWith('_attivi'))return'toggle';
   if(['_testo','_descrizione','_risposta','_sottotitolo'].some(t=>key.includes(t)))return'textarea';
-  if(key.includes('_url')||key.includes('_mappa')||key.includes('_instagram')||key.includes('_facebook'))return'url';
+  if(key.includes('_url')||key.includes('_mappa')||key.includes('_instagram')||key.includes('_facebook')||key==='og_immagine')return'url';
   if(key.includes('_telefono')||key.includes('_whatsapp')||key.includes('_contatto'))return'tel';
   if(key.includes('_scadenza'))return'date';
   return'text';
 }
 
 function secOf(key){
-  if(key.startsWith('tema_')||['crediti_ompage_footer'].includes(key))return'impostazioni';
-  if(key.startsWith('seo_')||key.startsWith('og_'))return'seo';
+  // Posiziona i temi dentro Impostazioni
+  if(key.startsWith('tema_')||['sito_in_bozza_watermark','crediti_ompage_footer'].includes(key))return'impostazioni';
+  
+  if(key.startsWith('seo_')||key.startsWith('og_')||key.startsWith('schema_'))return'seo';
   if(key.startsWith('navbar_'))return'navbar';
   if(key.startsWith('barra_')||key.startsWith('popup_'))return'promozioni';
   if(key.startsWith('hero_'))return'hero';
@@ -770,6 +904,18 @@ function secOf(key){
   if(/^faq_\d+_/.test(key))return'faq';
   if(key.startsWith('footer_'))return'footer';
   return'extra';
+}
+
+function limitAttr(key) {
+  const limit = maxLen(key);
+  return limit ? ` maxlength="${limit}"` : '';
+}
+
+function countHtml(key, val) {
+  const limit = maxLen(key);
+  if (!limit) return '';
+  const len = String(val || '').length;
+  return `<div class="char-count${len>limit?' over':''}" id="cc_${key}">${len}/${limit}</div>`;
 }
 
 function rf(key,val){
@@ -785,68 +931,66 @@ function rf(key,val){
         <span class="tv${on?' on':''}" id="tv_${key}">${on?'SI':'NO'}</span>
       </div>
       <input type="hidden" id="${id}" value="${h(val)}" data-key="${key}">
+      <span class="fk" style="margin-top:4px">${key}</span>
     </div>`;
   }
 
-  // Gestione Limits Caratteri
-  let maxL = '';
-  let maxN = 0;
-  if(key.includes('_titolo') || key.includes('_nome') || key.includes('_domanda')) { maxL = 'maxlength="60"'; maxN = 60; }
-  else if(key.includes('_sottotitolo') || key.includes('seo_descrizione') || key.includes('_didascalia') || key.includes('_prezzo')) { maxL = 'maxlength="160"'; maxN = 160; }
-  else if(key.includes('_testo') || key.includes('_descrizione') || key.includes('_risposta')) { maxL = 'maxlength="600"'; maxN = 600; }
-
   let inp='';
   if(t==='select'){
-    const opts=SELOPTS[key].map(o=>`<option value="${o}"${val===o?' selected':''}>${o.replace(/_/g,' ')}</option>`).join('');
+    const opts=SELOPTS[key].map(o=>`<option value="${o}"${val===o?' selected':''}>${optionLabel(key,o)}</option>`).join('');
     inp=`<select class="fsel" id="${id}" data-key="${key}" onchange="setField('${key}',this.value)">${opts}</select>`;
   } else if(t==='textarea'){
-    inp=`<textarea class="fta" id="${id}" data-key="${key}" rows="3" ${maxL}
-      oninput="setField('${key}',this.value);ar(this);${maxN>0?`updateCC('${key}',${maxN})`:''}">${h(val)}</textarea>
-      ${maxN>0?`<div class="char-count${val.length>maxN?' over':''}" id="cc_${key}">${val.length}/${maxN}</div>`:''}`;
+    const hasLimit=!!maxLen(key);
+    inp=`<textarea class="fta" id="${id}" data-key="${key}" rows="3"${limitAttr(key)}
+      oninput="setField('${key}',this.value);ar(this)${hasLimit?`;updateCC('${key}')`:''}">
+${h(val)}</textarea>${countHtml(key,val)}`;
   } else if(t==='url'){
     inp=`
-      <input type="url" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" placeholder="https://www.esempio.it/..." oninput="setField('${key}',this.value)">
+      <input type="url" class="fi" id="${id}" data-key="${key}" value="${ha(val)}"${limitAttr(key)} placeholder="https://www.esempio.it/..." oninput="setField('${key}',this.value)${maxLen(key)?`;updateCC('${key}')`:''}">
       <div class="dr">Inserisci l'indirizzo web completo (deve iniziare con https://)</div>`;
   } else if(t==='tel'){
-    inp=`<input type="tel" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" placeholder="+39 333 1234567" oninput="setField('${key}',this.value)">`;
+    inp=`<input type="tel" class="fi" id="${id}" data-key="${key}" value="${ha(val)}"${limitAttr(key)} placeholder="+39 333 1234567" oninput="setField('${key}',this.value)${maxLen(key)?`;updateCC('${key}')`:''}">${countHtml(key,val)}`;
   } else if(t==='date'){
     inp=`<input type="date" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" oninput="setField('${key}',this.value);updDr('${key}')">
     <div class="dr" id="dr_${key}">${val?fmtDate(val):''}</div>`;
-  } else if(t==='imgpath' || t==='pdfpath'){
-    const hasVal = val && val.trim() !== '';
-    const isPdf = t === 'pdfpath';
-    const accept = isPdf ? 'application/pdf' : 'image/jpeg, image/png, image/webp';
-    
-    let preview = '';
-    if(isPdf) {
-      preview = `<div class="pdf-icon-holder ${hasVal?'has-file':''}" id="iph_${key}">${hasVal ? '📄' : '📁'}</div>
-                 <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
-                   <div id="pname_${key}" style="font-size:12px; color:var(--text-secondary); word-break:break-all; min-height:18px;">${hasVal ? val : 'Nessun PDF caricato'}</div>`;
-    } else {
-      preview = `<img src="${ha(val)}" class="ithumb" id="ithumb_${key}" ${hasVal?'':'style="display:none"'} onerror="this.style.display='none';document.getElementById('iph_${key}').style.display='flex'">
-                 <div class="ipholder" id="iph_${key}" ${hasVal?'style="display:none"':''}>📷</div>
-                 <div style="flex:1; display:flex; flex-direction:column; gap:8px;">`;
-    }
-
-    inp = `
+  } else if(t==='imgpath'){
+    const hasThumb=val&&val.trim()!=='';
+    inp=`
       <div class="iw">
-        ${preview}
-           <input type="hidden" id="${id}" data-key="${key}" value="${ha(val)}">
-           <input type="file" id="file_${key}" accept="${accept}" style="display:none" onchange="uploadToGitHub(event, '${key}', ${isPdf})">
+        <img src="${ha(val)}" class="ithumb" id="ithumb_${key}" ${hasThumb?'':'style="display:none"'} onerror="this.style.display='none';document.getElementById('iph_${key}').style.display='flex'">
+        <div class="ipholder" id="iph_${key}" ${hasThumb?'style="display:none"':''}>📷</div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+           <input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" oninput="setField('${key}',this.value);updThumb('${key}')" style="font-size:12px; padding:6px; color:var(--text-secondary);" readonly>
+           <input type="file" id="file_${key}" accept="image/jpeg, image/png, image/webp" style="display:none" onchange="uploadToGitHub(event, '${key}')">
            <div style="display:flex; gap:8px;">
-             <button class="btn btn-outline btn-sm" onclick="document.getElementById('file_${key}').click()">Carica ${isPdf?'PDF':'Immagine'}</button>
-             <button class="btn btn-ghost btn-sm" onclick="clrFile('${key}', ${isPdf})" title="Rimuovi file">✕ Rimuovi</button>
+             <button class="btn btn-outline btn-sm" onclick="document.getElementById('file_${key}').click()">Carica immagine</button>
+             <button class="btn btn-ghost btn-sm" onclick="clrImg('${key}')" title="Svuota immagine">✕ Rimuovi</button>
            </div>
         </div>
       </div>
-      <div class="dr" id="upload_status_${key}" style="color:var(--accent); display:none; margin-top:8px;">⏳ Caricamento in corso... attendi.</div>`;
+      <div class="dr" id="upload_status_${key}" style="color:var(--accent); display:none;">⏳ Caricamento in corso... attendi.</div>`;
+  } else if(t==='pdfpath'){
+    const fileName = val ? val.split('/').pop() : 'Nessun PDF caricato';
+    inp=`
+      <div class="file-pill">
+        <span>📄</span>
+        <span class="file-pill-name" id="file_label_${key}">${h(fileName)}</span>
+      </div>
+      <input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" style="font-size:12px; padding:6px; color:var(--text-secondary); margin-top:6px;" readonly>
+      <input type="file" id="file_${key}" accept="application/pdf,.pdf" style="display:none" onchange="uploadPdfToGitHub(event, '${key}')">
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('file_${key}').click()">Carica PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="clrFile('${key}')" title="Svuota PDF">✕ Rimuovi</button>
+      </div>
+      <div class="dr" id="upload_status_${key}" style="color:var(--accent); display:none;">⏳ Caricamento in corso... attendi.</div>
+      <div class="field-help">Il file viene salvato nella cartella <code>assets</code> del repository.</div>`;
   } else {
-    inp=`<input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" ${maxL} oninput="setField('${key}',this.value);${maxN>0?`updateCC('${key}',${maxN})`:''}">
-    ${maxN>0?`<div class="char-count${val.length>maxN?' over':''}" id="cc_${key}">${val.length}/${maxN}</div>`:''}`;
+    inp=`<input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}"${limitAttr(key)} oninput="setField('${key}',this.value)${maxLen(key)?`;updateCC('${key}')`:''}">${countHtml(key,val)}`;
   }
 
   return`<div class="fw" id="fw_${key}">
     <label class="fl" for="${id}">${h(label)}</label>
+    <span class="fk">${key}</span>
     ${inp}
   </div>`;
 }
@@ -860,6 +1004,7 @@ function makeCard(cardId,toggleKey,name,body){
     <div class="card-hdr" onclick="toggleCard('${cardId}')">
       <div class="tt${on?' on':''}" id="tt_${toggleKey}" onclick="event.stopPropagation();togField('${toggleKey}')" style="flex-shrink:0"><div class="tthumb"></div></div>
       <input type="hidden" id="f_${toggleKey}" value="${on?'SI':'NO'}" data-key="${toggleKey}">
+      <span class="tv${on?' on':''}" id="tv_${toggleKey}">${on?'SI':'NO'}</span>
       <div class="card-name">${h(name)}</div>
       <span class="card-chev">▼</span>
     </div>
@@ -875,8 +1020,11 @@ function buildImpostazioni(keys){
     +(temi.length?gbox('🎨 Stile Grafico',temi.map(k=>rf(k,CFG[k])).join('')):'');
 }
 function buildSeo(keys){
-  return sHdr('🔍','SEO & Social','Titolo e descrizione per i motori di ricerca')
-    +keys.map(k=>rf(k,CFG[k])).join('');
+  const schema=keys.filter(k=>k.startsWith('schema_'));
+  const main=keys.filter(k=>!k.startsWith('schema_'));
+  return sHdr('🔍','SEO & Metadati','Ottimizzazione motori di ricerca')
+    +main.map(k=>rf(k,CFG[k])).join('')
+    +(schema.length?gbox('📋 Schema.org',schema.map(k=>rf(k,CFG[k])).join('')):'');
 }
 function buildNavbar(keys){
   const logo=keys.filter(k=>k.startsWith('navbar_logo_'));
@@ -977,17 +1125,21 @@ function buildExtra(keys){
 function buildUI(){
   const bySection={};
   SECTIONS.forEach(s=>{bySection[s.id]=[]});
-  
-  // Raggruppiamo solo le chiavi VISIBILI (filtrate all'avvio)
-  VISIBLE_KEYS.forEach(k=>{const s=secOf(k);(bySection[s]||bySection.extra).push(k)});
+  ORIG_KEYS.forEach(k=>{
+    if(isHiddenKey(k))return;
+    const s=secOf(k);
+    (bySection[s]||bySection.extra).push(k);
+  });
 
   const nav=document.getElementById('sidebar-nav');
   nav.innerHTML='';
   SECTIONS.forEach(s=>{
     if(!bySection[s.id]?.length)return;
+    let badge='';
+    if(s.id==='chi_siamo'&&CFG.chi_siamo_attivo!=='SI')badge=`<span class="nav-badge off">OFF</span>`;
     const el=document.createElement('div');
     el.className='nav-item';el.id='nav_'+s.id;
-    el.innerHTML=`<span class="nav-icon">${s.icon}</span><span class="nav-label">${s.label}</span>`;
+    el.innerHTML=`<span class="nav-icon">${s.icon}</span><span class="nav-label">${s.label}</span>${badge}`;
     el.onclick=()=>showSec(s.id);
     nav.appendChild(el);
   });
@@ -1009,7 +1161,7 @@ function buildUI(){
   setTimeout(()=>{document.querySelectorAll('.fta').forEach(ta=>ar(ta))},80);
   const first=SECTIONS.find(s=>bySection[s.id]?.length);
   if(first)showSec(first.id);
-  document.getElementById('site-name').textContent=CFG.footer_nome||CFG.seo_titolo||'Il mio Sito';
+  document.getElementById('site-name').textContent=CFG.navbar_logo_testo||CFG.seo_titolo||'Sito';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1038,13 +1190,14 @@ function togField(key){
   const v=CFG[key]==='SI'?'NO':'SI'; CFG[key]=v; IS_DIRTY=true;
   document.getElementById('tt_'+key)?.classList.toggle('on',v==='SI');
   const tv=document.getElementById('tv_'+key);
-  if(tv) tv.classList.toggle('on',v==='SI');
+  if(tv){tv.textContent=v;tv.classList.toggle('on',v==='SI')}
   const inp=document.getElementById('f_'+key); if(inp)inp.value=v;
 }
 
-function updateCC(key, max){
+function updateCC(key){
   const el=document.getElementById('f_'+key),cc=document.getElementById('cc_'+key);
-  if(el&&cc){const l=el.value.length;cc.textContent=`${l}/${max}`;cc.classList.toggle('over',l>max)}
+  const limit=maxLen(key);
+  if(el&&cc&&limit){const l=el.value.length;cc.textContent=`${l}/${limit}`;cc.classList.toggle('over',l>limit)}
 }
 function updDr(key){
   const el=document.getElementById('f_'+key),dr=document.getElementById('dr_'+key);
@@ -1056,19 +1209,14 @@ function updThumb(key){
   if(!inp)return; const v=inp.value.trim();
   if(th&&ph){if(v){th.src=v;th.style.display='';ph.style.display='none'}else{th.style.display='none';ph.style.display=''}}
 }
-function clrFile(key, isPdf){
-  const inp=document.getElementById('f_'+key);
-  if(inp){
-    inp.value=''; setField(key,'');
-    if(isPdf){
-       document.getElementById('pname_'+key).textContent = 'Nessun PDF caricato';
-       document.getElementById('iph_'+key).classList.remove('has-file');
-       document.getElementById('iph_'+key).textContent = '📁';
-    } else {
-       updThumb(key);
-    }
-  }
+function clrImg(key){const inp=document.getElementById('f_'+key);if(inp){inp.value='';setField(key,'');updThumb(key)}}
+function updFileLabel(key){
+  const inp=document.getElementById('f_'+key),label=document.getElementById('file_label_'+key);
+  if(!inp||!label)return;
+  const v=inp.value.trim();
+  label.textContent=v?v.split('/').pop():'Nessun PDF caricato';
 }
+function clrFile(key){const inp=document.getElementById('f_'+key);if(inp){inp.value='';setField(key,'');updFileLabel(key)}}
 
 // ════════════════════════════════════════════════════════════
 // VALIDATION
@@ -1079,6 +1227,13 @@ function validate(){
   if(!CFG.footer_nome?.trim())errs.push({k:'footer_nome',m:'Il nome nel footer non può essere vuoto.'});
   if(!CFG.footer_whatsapp?.trim()&&!CFG.footer_telefono?.trim())
     errs.push({k:'footer_whatsapp',m:'Inserisci almeno WhatsApp o Telefono nel footer.'});
+  ORIG_KEYS.forEach(k=>{
+    if(isHiddenKey(k))return;
+    const limit=maxLen(k);
+    if(limit&&String(CFG[k]||'').length>limit){
+      errs.push({k,m:`"${lbl(k)}" supera il limite di ${limit} caratteri.`});
+    }
+  });
   if(errs.length){
     flash('⚠️ '+errs[0].m,'warning');
     showSec(secOf(errs[0].k));
@@ -1088,11 +1243,26 @@ function validate(){
   return true;
 }
 
+function syncDerivedFields(){
+  if('schema_nome' in CFG) {
+    CFG.schema_nome = CFG.footer_nome || CFG.navbar_logo_testo || CFG.schema_nome || '';
+  }
+  if('schema_indirizzo' in CFG) {
+    CFG.schema_indirizzo = CFG.footer_indirizzo || CFG.schema_indirizzo || '';
+  }
+  if('schema_telefono' in CFG) {
+    CFG.schema_telefono = CFG.footer_telefono || CFG.footer_whatsapp || CFG.schema_telefono || '';
+  }
+  if('schema_orari' in CFG) {
+    CFG.schema_orari = CFG.footer_orari || CFG.schema_orari || '';
+  }
+}
+
 // ════════════════════════════════════════════════════════════
-// FIX URLs
+// FIX URLs — imgpath non viene mai toccato
 // ════════════════════════════════════════════════════════════
 function fixUrlsTels(){
-  VISIBLE_KEYS.forEach(key=>{
+  ORIG_KEYS.forEach(key=>{
     const t=ftype(key);
     if(t==='url'&&CFG[key]){
       const v=CFG[key].trim();

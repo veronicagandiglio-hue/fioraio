@@ -3,792 +3,375 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ompage · Pannello</title>
+<title>Ompage · Pannello di Controllo</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f8f9fa;--sidebar-bg:#1e1e2e;--sidebar-text:#cdd6f4;
-  --sidebar-active-bg:#313244;--accent:#4f46e5;
-  --text-primary:#111827;--text-secondary:#6b7280;--text-key:#9ca3af;
-  --border:#d1d5db;--border-section:#e5e7eb;
-  --success:#16a34a;--warning:#d97706;--error:#dc2626;
-  --toggle-on:#4f46e5;--toggle-off:#9ca3af;
-  --surface:#ffffff;--sidebar-w:260px;--header-h:56px;
+:root {
+  --bg: #f5f5f5;
+  --sidebar: #1a1a2e;
+  --sidebar-hover: #252545;
+  --sidebar-active: #4f46e5;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --text: #1f2937;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+  --surface: #ffffff;
+  --success: #16a34a;
+  --error: #dc2626;
+  --sidebar-w: 240px;
+  --header-h: 56px;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1);
 }
-html,body{height:100%}
-body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;background:var(--bg);color:var(--text-primary);line-height:1.5}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;}
+button{cursor:pointer;font-family:inherit;}
+input,textarea,select{font-family:inherit;font-size:inherit;}
+a{color:var(--accent);}
 
-/* HEADER */
-#app-header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:#fff;border-bottom:1px solid var(--border-section);display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px}
-.h-logo{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;white-space:nowrap}
-.h-logo-accent{color:var(--accent)}
-.h-site-name{flex:1;text-align:center;font-size:13px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
-#hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--text-primary)}
+/* SETUP */
+#setup-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+.setup-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px;width:100%;max-width:480px;box-shadow:var(--shadow-md);}
+.setup-logo{font-size:22px;font-weight:700;color:var(--sidebar);letter-spacing:-.5px;margin-bottom:6px;}
+.setup-logo span{color:var(--accent);}
+.setup-subtitle{font-size:13px;color:var(--text-muted);margin-bottom:32px;}
+.setup-field{margin-bottom:20px;}
+.setup-field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+.setup-field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:#fafafa;outline:none;transition:border-color .15s,box-shadow .15s;}
+.setup-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.12);background:#fff;}
+.setup-field small{display:block;margin-top:5px;font-size:12px;color:var(--text-muted);}
+.setup-field small a{font-size:12px;}
+.setup-divider{border:none;border-top:1px solid var(--border);margin:24px 0;}
+.setup-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:16px;}
+.btn-primary{width:100%;padding:11px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;transition:background .15s;}
+.btn-primary:hover{background:var(--accent-hover);}
+.btn-primary:disabled{background:#a5b4fc;cursor:not-allowed;}
+.setup-error{display:none;margin-top:16px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius);font-size:13px;color:var(--error);}
 
 /* LAYOUT */
-.layout{display:flex;margin-top:var(--header-h);min-height:calc(100vh - var(--header-h))}
+#main-panel{display:none;min-height:100vh;}
+#header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--sidebar);display:flex;align-items:center;padding:0 20px;z-index:100;gap:16px;}
+.header-logo{font-size:16px;font-weight:700;color:#fff;flex:1;}
+.header-logo span{color:#818cf8;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.btn-header{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;border:none;transition:all .15s;}
+.btn-preview{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);}
+.btn-preview:hover{background:rgba(255,255,255,.18);}
+.btn-disconnect{background:transparent;color:#94a3b8;font-size:12px;padding:4px 8px;}
+.btn-disconnect:hover{color:#e2e8f0;}
+#hamburger{display:none;background:transparent;border:none;color:#fff;font-size:20px;padding:4px 8px;}
 
 /* SIDEBAR */
-#sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:var(--header-h);bottom:0;left:0;overflow-y:auto;z-index:90;transition:transform .25s ease}
-.sidebar-nav{flex:1;padding:10px 0}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;color:var(--sidebar-text);font-size:13px;transition:background .15s;border-left:3px solid transparent;user-select:none}
-.nav-item:hover{background:rgba(255,255,255,.05)}
-.nav-item.active{background:var(--sidebar-active-bg);color:#fff;border-left-color:var(--accent)}
-.nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
-.nav-label{flex:1}
-.nav-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;background:var(--success);color:#fff}
-.nav-badge.off{background:var(--text-key)}
-.sidebar-footer{padding:14px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:8px}
+#sidebar{position:fixed;top:var(--header-h);left:0;bottom:0;width:var(--sidebar-w);background:var(--sidebar);overflow-y:auto;z-index:90;padding:12px 0 80px;scrollbar-width:thin;scrollbar-color:#374151 transparent;}
+#sidebar::-webkit-scrollbar{width:4px;}
+#sidebar::-webkit-scrollbar-thumb{background:#374151;border-radius:4px;}
+.sidebar-label{padding:16px 16px 6px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#475569;}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:#94a3b8;cursor:pointer;transition:all .15s;border-left:3px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-item:hover{background:var(--sidebar-hover);color:#e2e8f0;}
+.sidebar-item.active{background:rgba(79,70,229,.2);color:#a5b4fc;border-left-color:var(--accent);}
+.sidebar-item.inactive-section{opacity:.55;}
+.sidebar-item .icon{font-size:15px;flex-shrink:0;}
 
-/* MAIN */
-#main-content{margin-left:var(--sidebar-w);flex:1;padding:24px;min-width:0;overflow-y:auto;max-height:calc(100vh - var(--header-h))}
-.section-pane{display:none}
-.section-pane.active{display:block}
-.section-hdr{margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--border-section)}
-.section-title{font-size:20px;font-weight:700;margin-bottom:2px}
-.section-subtitle{font-size:13px;color:var(--text-secondary)}
+/* CONTENT */
+#content{margin-left:var(--sidebar-w);margin-top:var(--header-h);padding:28px 32px 120px;min-height:calc(100vh - var(--header-h));}
+.page-loading{display:flex;align-items:center;justify-content:center;min-height:300px;gap:12px;color:var(--text-muted);font-size:14px;}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:background .15s,transform .1s;text-decoration:none;white-space:nowrap;font-family:inherit}
-.btn:active{transform:scale(.98)}
-.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
-.btn-primary{background:var(--accent);color:#fff;width:100%}
-.btn-primary:not(:disabled):hover{background:#4338ca}
-.btn-secondary{background:rgba(255,255,255,.09);color:var(--sidebar-text);width:100%;border:1px solid rgba(255,255,255,.12)}
-.btn-secondary:not(:disabled):hover{background:rgba(255,255,255,.14)}
-.btn-outline{background:#fff;color:var(--text-primary);border:1px solid var(--border)}
-.btn-outline:not(:disabled):hover{background:var(--bg)}
-.btn-ghost{background:transparent;color:var(--text-secondary);padding:6px 10px}
-.btn-ghost:hover{background:var(--bg)}
-.btn-sm{padding:5px 10px;font-size:12px}
-.btn-danger{background:var(--error);color:#fff}
-.btn-save-main{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;width:100%;font-size:14px;padding:12px 16px;border-radius:8px;font-weight:600}
-.btn-save-main:not(:disabled):hover{background:linear-gradient(135deg,#4338ca,#6d28d9)}
+/* ACCORDION */
+.panel-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden;}
+.section-header{display:flex;align-items:center;padding:14px 18px;cursor:pointer;user-select:none;gap:10px;transition:background .15s;}
+.section-header:hover{background:#fafafa;}
+.section-icon{font-size:18px;flex-shrink:0;}
+.section-title{font-size:14px;font-weight:600;flex:1;}
+.section-status{font-size:11px;font-weight:500;padding:2px 8px;border-radius:10px;}
+.section-status.active{background:#dcfce7;color:#15803d;}
+.section-status.inactive{background:#f1f5f9;color:#64748b;}
+.section-chevron{font-size:12px;color:var(--text-muted);transition:transform .25s;flex-shrink:0;}
+.section-chevron.open{transform:rotate(180deg);}
+.section-inactive .section-header{opacity:.65;}
+.section-body-wrapper{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease;}
+.section-body-wrapper.open{grid-template-rows:1fr;}
+.section-body-inner{overflow:hidden;}
+.section-body{padding:8px 18px 20px;border-top:1px solid var(--border);}
 
 /* FIELDS */
-.fw{margin-bottom:18px}
-.fl{display:block;font-size:13px;font-weight:500;color:var(--text-primary);margin-bottom:3px}
-.fk{display:block;font-size:11px;color:var(--text-key);margin-bottom:5px;font-family:'Menlo','Monaco',monospace}
-.fi,.fta,.fsel{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;color:var(--text-primary);background:#fff;transition:border-color .15s,box-shadow .15s;outline:none}
-.fi:focus,.fta:focus,.fsel:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.15)}
-.fta{resize:none;min-height:76px;overflow-y:hidden;line-height:1.5}
-.char-count{font-size:11px;color:var(--text-key);text-align:right;margin-top:3px}
-.char-count.over{color:var(--error)}
+.field-group{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.field-group.single{grid-template-columns:1fr;}
+@media(max-width:700px){.field-group{grid-template-columns:1fr;}}
+.field{margin-bottom:14px;}
+.field.dimmed{opacity:.45;}
+.field-label{display:flex;align-items:baseline;gap:8px;margin-bottom:5px;}
+.field-label-text{font-size:13px;font-weight:600;}
+.field-key{font-size:11px;color:#9ca3af;font-family:'Courier New',monospace;}
+.field input[type="text"],.field input[type="tel"],.field input[type="url"],.field select,.field textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:6px;font-size:13.5px;background:#fafafa;transition:border-color .15s,box-shadow .15s;outline:none;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1);background:#fff;}
+.field textarea{resize:vertical;min-height:72px;}
+.toggle-wrap{display:flex;align-items:center;gap:12px;}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:#d1d5db;border-radius:24px;cursor:pointer;transition:background .2s;}
+.toggle input:checked+.toggle-track{background:var(--accent);}
+.toggle-track::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle input:checked+.toggle-track::after{transform:translateX(18px);}
+.toggle-label-text{font-size:13px;color:var(--text-muted);}
+.color-wrap{display:flex;align-items:center;gap:8px;}
+.color-swatch{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);padding:2px;flex-shrink:0;}
+.color-swatch input[type="color"]{width:100%;height:100%;border:none;padding:0;cursor:pointer;background:none;border-radius:4px;}
+.color-hex{width:110px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:'Courier New',monospace;text-transform:uppercase;background:#fafafa;outline:none;}
+.color-hex:focus{border-color:var(--accent);}
+.img-wrap{display:flex;align-items:center;gap:8px;}
+.img-thumb{width:40px;height:40px;border-radius:6px;border:1px solid var(--border);object-fit:cover;flex-shrink:0;}
+.img-thumb-placeholder{width:40px;height:40px;border-radius:6px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;color:#d1d5db;flex-shrink:0;background:#fafafa;}
+.img-input-wrap{flex:1;display:flex;gap:6px;}
+.img-input-wrap input{flex:1;min-width:0;}
+.btn-upload{padding:7px 12px;background:#f3f4f6;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;color:var(--text-muted);white-space:nowrap;flex-shrink:0;transition:all .15s;}
+.btn-upload:hover{background:var(--border);color:var(--text);}
+.upload-progress{font-size:11px;color:var(--accent);margin-top:3px;display:none;}
+.subgroup-heading{display:flex;align-items:center;gap:8px;margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.subgroup-heading:first-child{margin-top:8px;}
+.subgroup-title{font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;}
+.field-error{display:none;font-size:11.5px;color:var(--error);margin-top:4px;}
+.field.has-error input,.field.has-error textarea,.field.has-error select{border-color:var(--error)!important;}
+.field.has-error .field-error{display:block;}
 
-/* TOGGLE */
-.tw{display:flex;align-items:center;gap:10px}
-.tt{width:40px;height:22px;border-radius:11px;background:var(--toggle-off);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
-.tt.on{background:var(--toggle-on)}
-.tthumb{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.tt.on .tthumb{transform:translateX(18px)}
-.tv{font-size:12px;font-weight:700;color:var(--text-key)}
-.tv.on{color:var(--accent)}
+/* SAVE BUTTON */
+#save-btn{position:fixed;bottom:28px;right:28px;padding:14px 24px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;box-shadow:0 4px 14px rgba(79,70,229,.4);transition:all .2s;z-index:200;display:none;}
+#save-btn:hover{background:var(--accent-hover);transform:translateY(-1px);}
+#save-btn:disabled{background:#a5b4fc;cursor:not-allowed;transform:none;box-shadow:none;}
 
-/* IMG PATH */
-.iw{display:flex;gap:6px;align-items:center}
-.ithumb{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0}
-.ipholder{width:48px;height:48px;border-radius:6px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-key);flex-shrink:0;background:var(--bg)}
-.file-pill{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text-secondary);font-size:12px;min-height:40px}
-.file-pill-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.field-help{font-size:12px;color:var(--text-secondary);margin-top:4px}
+/* UNSAVED */
+#unsaved-dot{width:8px;height:8px;background:#f59e0b;border-radius:50%;display:none;margin-left:6px;animation:pulse 2s infinite;}
+#unsaved-dot.visible{display:inline-block;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
 
-/* DATE */
-.dr{font-size:12px;color:var(--text-secondary);margin-top:3px}
+/* BANNER */
+#banner{position:fixed;top:calc(var(--header-h) + 12px);left:50%;transform:translateX(-50%) translateY(-8px);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 20px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-md);z-index:300;opacity:0;pointer-events:none;transition:all .3s;max-width:500px;text-align:center;}
+#banner.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+#banner.success{border-color:#bbf7d0;background:#f0fdf4;color:#15803d;}
+#banner.error{border-color:#fecaca;background:#fef2f2;color:var(--error);}
 
-/* GROUP BOX */
-.gbox{border:1px solid var(--border-section);border-radius:8px;padding:16px;background:var(--surface);margin-bottom:20px}
-.gbox-title{font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-section);text-transform:uppercase;letter-spacing:.05em}
+/* PAGE ERROR */
+.page-error{padding:40px;text-align:center;}
+.page-error h3{color:var(--error);margin-bottom:8px;}
+.page-error p{color:var(--text-muted);font-size:13px;}
 
-/* CARD collassabile */
-.card{border:1px solid var(--border-section);border-radius:8px;background:var(--surface);margin-bottom:10px;overflow:hidden}
-.card-hdr{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
-.card-hdr:hover{background:var(--bg)}
-.card-name{flex:1;font-weight:500;font-size:13px}
-.card-chev{color:var(--text-key);transition:transform .2s;font-size:11px;flex-shrink:0}
-.card.open .card-chev{transform:rotate(180deg)}
-.card-body{display:none;padding:16px;border-top:1px solid var(--border-section);background:#fafafa}
-.card.open .card-body{display:block}
+/* ══════════════════════════════════
+   GUIDA SECTION
+══════════════════════════════════ */
+#guida-area{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);}
+#guida-area h2{font-size:16px;font-weight:700;margin-bottom:4px;}
+#guida-area .guida-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
+#guida-textarea{width:100%;min-height:520px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);font-family:'Courier New',monospace;font-size:13px;line-height:1.65;background:#fafafa;resize:vertical;outline:none;transition:border-color .15s;}
+#guida-textarea:focus{border-color:var(--accent);background:#fff;}
+.guida-actions{display:flex;align-items:center;gap:12px;margin-top:14px;}
+.btn-guida-save{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;transition:background .15s;}
+.btn-guida-save:hover{background:var(--accent-hover);}
+.btn-guida-save:disabled{background:#a5b4fc;cursor:not-allowed;}
+.guida-status{font-size:12px;color:var(--text-muted);}
+.guida-hint{margin-top:16px;padding:12px 16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius);font-size:12.5px;color:#1d4ed8;line-height:1.6;}
 
-/* DIVIDER */
-.divider{height:1px;background:var(--border-section);margin:18px 0}
-.sub-label{font-size:12px;font-weight:700;color:var(--text-secondary);margin:16px 0 10px;text-transform:uppercase;letter-spacing:.05em}
+/* ══════════════════════════════════
+   CHAT WIDGET
+══════════════════════════════════ */
+#chat-btn{position:fixed;bottom:28px;left:28px;padding:12px 18px;background:#0f172a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:all .2s;z-index:200;display:none;gap:8px;align-items:center;}
+#chat-btn:hover{background:#1e293b;transform:translateY(-1px);}
+#chat-btn.no-worker{background:#64748b;cursor:default;}
+#chat-btn.no-worker:hover{transform:none;}
 
-/* FLASH */
-.flash{position:fixed;top:calc(var(--header-h) + 10px);left:50%;transform:translateX(-50%);z-index:500;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;display:none;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);max-width:90vw;animation:bIn .2s ease}
-@keyframes bIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.flash-success{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d}
-.flash-error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
-.flash-warning{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
-.flash-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
-.flash-close{cursor:pointer;opacity:.6;margin-left:4px}
-.flash-close:hover{opacity:1}
+#chat-panel{position:fixed;top:var(--header-h);right:0;bottom:0;width:380px;background:var(--surface);border-left:1px solid var(--border);box-shadow:-4px 0 20px rgba(0,0,0,.08);z-index:150;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease;}
+#chat-panel.open{transform:translateX(0);}
+#chat-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:#0f172a;color:#fff;flex-shrink:0;}
+#chat-header .chat-title{flex:1;font-size:14px;font-weight:600;}
+#chat-header .chat-subtitle{font-size:11px;color:#94a3b8;display:block;}
+#chat-close{background:transparent;border:none;color:#94a3b8;font-size:18px;padding:4px;line-height:1;transition:color .15s;}
+#chat-close:hover{color:#fff;}
+#chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+#chat-messages::-webkit-scrollbar{width:4px;}
+#chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.chat-msg{max-width:88%;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.55;word-break:break-word;}
+.chat-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px;}
+.chat-msg.bot{align-self:flex-start;background:#f1f5f9;color:var(--text);border-bottom-left-radius:4px;}
+.chat-msg.bot.loading{color:var(--text-muted);font-style:italic;}
+.chat-msg.error{background:#fef2f2;color:var(--error);}
+.chat-msg p{margin:0 0 6px;}
+.chat-msg p:last-child{margin:0;}
+.chat-msg code{background:rgba(0,0,0,.08);padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:12px;}
+.chat-msg.user code{background:rgba(255,255,255,.2);}
+.chat-welcome{text-align:center;color:var(--text-muted);font-size:12.5px;padding:20px 10px;line-height:1.6;}
+.chat-welcome strong{display:block;font-size:14px;color:var(--text);margin-bottom:6px;}
+#chat-input-area{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;background:var(--surface);}
+#chat-input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:none;min-height:40px;max-height:120px;outline:none;transition:border-color .15s;line-height:1.4;}
+#chat-input:focus{border-color:var(--accent);}
+#chat-send{padding:9px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;transition:background .15s;flex-shrink:0;align-self:flex-end;}
+#chat-send:hover{background:var(--accent-hover);}
+#chat-send:disabled{background:#a5b4fc;cursor:not-allowed;}
+.chat-no-worker{padding:20px;text-align:center;color:var(--text-muted);font-size:13px;line-height:1.6;}
+.chat-no-worker a{font-weight:600;}
 
-/* SUCCESS BANNER grande */
-#success-banner{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
-.success-card{background:#fff;border-radius:16px;padding:40px 32px;text-align:center;max-width:480px;width:90vw;box-shadow:0 24px 80px rgba(0,0,0,.25);animation:mIn .3s ease}
-@keyframes mIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-.success-icon{font-size:56px;margin-bottom:16px}
-.success-title{font-size:22px;font-weight:700;color:#15803d;margin-bottom:8px}
-.success-sub{font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:24px}
-
-/* MODAL */
-.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:flex;align-items:center;justify-content:center}
-.moverlay.hidden{display:none}
-.modal{background:#fff;border-radius:12px;padding:28px;width:500px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:mIn .2s ease}
-.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
-.modal-sub{font-size:13px;color:var(--text-secondary);margin-bottom:20px}
-.modal-err{display:none;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;font-size:13px;margin-bottom:14px}
-
-/* SETUP SCREEN */
-#setup-screen{display:none;position:fixed;inset:0;z-index:700;background:var(--bg);align-items:center;justify-content:center;padding:24px}
-.setup-card{background:#fff;border-radius:16px;padding:36px;width:100%;max-width:480px;box-shadow:0 8px 40px rgba(0,0,0,.1)}
-.setup-err{display:none;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;font-size:13px;margin-bottom:14px}
-
-/* LOADING */
-#loading-screen{position:fixed;inset:0;z-index:800;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
-.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:14px;color:var(--text-secondary)}
-
-/* STATUS BAR */
-#status-bar{position:fixed;top:var(--header-h);left:var(--sidebar-w);right:0;z-index:80}
-.status-connected{background:#f0fdf4;border-bottom:1px solid #bbf7d0;color:#15803d;padding:7px 20px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#16a34a;flex-shrink:0}
-
-/* GH STATUS sidebar */
-.gh-status-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;font-size:11px;margin-bottom:4px;font-weight:500;cursor:pointer;background:rgba(79,70,229,.1);color:var(--accent);border:1px solid rgba(79,70,229,.2)}
-.gh-status-row:hover{background:rgba(79,70,229,.18)}
-
-/* FAQ MORE */
-.faq-more{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--accent);font-size:13px;font-weight:500;padding:8px 0;user-select:none}
-.faq-extra{display:none}
-.faq-extra.open{display:block}
-
-/* EXTRA NOTICE */
-.extra-notice{padding:11px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;color:#92400e;font-size:13px;margin-bottom:18px}
-
-/* SIDEBAR OVERLAY mobile */
-#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:85}
-
-/* RESPONSIVE */
+/* MOBILE */
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:85;}
 @media(max-width:768px){
-  #hamburger{display:flex}
-  #sidebar{transform:translateX(-100%)}
-  #sidebar.open{transform:translateX(0)}
-  #main-content{margin-left:0}
-  #status-bar{left:0}
-  #sidebar-overlay.visible{display:block}
+  #hamburger{display:block;}
+  #sidebar{transform:translateX(-100%);transition:transform .25s;z-index:95;}
+  #sidebar.open{transform:translateX(0);}
+  #sidebar-overlay.visible{display:block;}
+  #content{margin-left:0;padding:20px 16px 120px;}
+  #save-btn{bottom:16px;right:16px;padding:12px 20px;}
+  #chat-btn{bottom:16px;left:16px;}
+  #chat-panel{width:100%;top:var(--header-h);}
 }
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading-screen">
-  <div class="spinner"></div>
-  <div class="loading-text" id="loading-text">Connessione a GitHub...</div>
-</div>
-
 <!-- SETUP SCREEN -->
 <div id="setup-screen">
   <div class="setup-card">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px">
-      <svg width="28" height="28" viewBox="0 0 22 22" fill="none"><rect width="22" height="22" rx="6" fill="#4f46e5"/><path d="M6 11a5 5 0 0 1 10 0" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="14" r="2" fill="#fff"/></svg>
-      <span style="font-weight:700;font-size:17px"><span style="color:var(--accent)">Ompage</span> · Pannello</span>
+    <div class="setup-logo">Ompage <span>·</span> Pannello</div>
+    <div class="setup-subtitle">Prima configurazione — inserisci le credenziali GitHub</div>
+
+    <div class="setup-field">
+      <label for="inp-token">Personal Access Token GitHub</label>
+      <input type="password" id="inp-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+      <small>Genera con scope <strong>repo</strong>: <a href="https://github.com/settings/tokens/new?scopes=repo&description=Ompage+Pannello" target="_blank" rel="noopener">github.com/settings/tokens/new</a></small>
     </div>
-    <div style="font-size:20px;font-weight:700;margin-bottom:6px">Prima configurazione</div>
-    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:22px;line-height:1.6">
-      Inserisci le credenziali GitHub per connettere il pannello al tuo sito.<br>
-      I dati vengono salvati solo nel tuo browser.
+    <div class="setup-field">
+      <label for="inp-repo">Repository GitHub</label>
+      <input type="text" id="inp-repo" placeholder="username/nome-repo" autocomplete="off">
+      <small>Formato: <code>username/nome-repository</code></small>
     </div>
-    <div class="setup-err" id="setup-err"></div>
-    <div class="fw">
-      <label class="fl">Personal Access Token GitHub</label>
-      <input type="password" class="fi" id="s-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-      <div style="margin-top:6px;font-size:12px;color:var(--text-secondary)">
-        <a href="https://github.com/settings/tokens/new?scopes=repo&description=Ompage+Pannello" target="_blank" style="color:var(--accent)">→ Crea token su GitHub</a>
-        — seleziona scope <strong>repo</strong>, scadenza 1 anno.
-      </div>
+
+    <hr class="setup-divider">
+    <div class="setup-section-label">Assistente virtuale (opzionale)</div>
+
+    <div class="setup-field">
+      <label for="inp-worker">URL Cloudflare Worker</label>
+      <input type="url" id="inp-worker" placeholder="https://ompage-assistant.account.workers.dev" autocomplete="off">
+      <small>Necessario per il bot di assistenza nel pannello. Puoi configurarlo dopo.</small>
     </div>
-    <div class="fw">
-      <label class="fl">Username GitHub</label>
-      <input type="text" class="fi" id="s-owner" placeholder="mario-rossi" autocomplete="off">
-    </div>
-    <div class="fw">
-      <label class="fl">Nome del repository</label>
-      <input type="text" class="fi" id="s-repo" placeholder="mio-sito-fioreria" autocomplete="off">
-      <div style="margin-top:4px;font-size:12px;color:var(--text-secondary)">Solo il nome, senza username. Es: <code>mio-sito</code></div>
-    </div>
-    <button class="btn btn-primary" id="setup-btn" onclick="doSetup()" style="margin-top:4px">Connetti e carica il sito →</button>
+
+    <button class="btn-primary" id="btn-connect" onclick="handleConnect()">Connetti e continua →</button>
+    <div id="setup-error" class="setup-error"></div>
   </div>
 </div>
 
-<!-- SUCCESS BANNER -->
-<div id="success-banner">
-  <div class="success-card">
-    <div class="success-icon">✅</div>
-    <div class="success-title">Sito aggiornato con successo!</div>
-    <div class="success-sub">
-      Le tue modifiche sono state salvate su GitHub.<br>
-      Le vedrai online entro <strong>1–2 minuti</strong>.<br><br>
-      GitHub impiega qualche istante per pubblicare le modifiche.
-    </div>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn btn-outline" style="width:auto" onclick="document.getElementById('success-banner').style.display='none'">Continua a modificare</button>
-      <a id="success-preview-link" href="#" target="_blank" class="btn btn-primary" style="width:auto">Vai al sito →</a>
+<!-- MAIN PANEL -->
+<div id="main-panel">
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div id="header">
+    <button id="hamburger" onclick="toggleSidebar()">☰</button>
+    <div class="header-logo">Ompage <span>·</span> Pannello</div>
+    <div class="header-actions">
+      <span id="unsaved-dot"></span>
+      <button class="btn-header btn-preview" onclick="openPreview()">👁️ Anteprima</button>
+      <button class="btn-header btn-disconnect" onclick="disconnect()">Disconnetti</button>
     </div>
   </div>
-</div>
 
-<!-- FLASH -->
-<div id="flash" class="flash">
-  <span id="flash-text"></span>
-  <span class="flash-close" onclick="hideFlash()">✕</span>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div id="settings-modal" class="moverlay hidden">
-  <div class="modal">
-    <div class="modal-title">⚙️ Impostazioni connessione</div>
-    <div class="modal-sub">Modifica le credenziali GitHub o disconnetti il pannello.</div>
-    <div class="fw">
-      <label class="fl">Token GitHub</label>
-      <input type="password" class="fi" id="m-token" autocomplete="off">
-    </div>
-    <div class="fw">
-      <label class="fl">Username</label>
-      <input type="text" class="fi" id="m-owner">
-    </div>
-    <div class="fw">
-      <label class="fl">Repository</label>
-      <input type="text" class="fi" id="m-repo">
-    </div>
-    <div class="modal-err" id="settings-err"></div>
-    <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-top:4px">
-      <button class="btn btn-danger btn-sm" onclick="disconnect()">Disconnetti</button>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-outline" onclick="closeSettings()">Annulla</button>
-        <button class="btn btn-primary" style="width:auto" onclick="saveSettings()">Salva</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- HEADER -->
-<header id="app-header" style="display:none">
-  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-    <button id="hamburger" onclick="toggleSidebar()">
-      <svg width="20" height="20" viewBox="0 0 20 20"><rect x="2" y="4" width="16" height="2" rx="1" fill="currentColor"/><rect x="2" y="9" width="16" height="2" rx="1" fill="currentColor"/><rect x="2" y="14" width="16" height="2" rx="1" fill="currentColor"/></svg>
-    </button>
-    <div class="h-logo">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect width="22" height="22" rx="6" fill="#4f46e5"/><path d="M6 11a5 5 0 0 1 10 0" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="14" r="2" fill="#fff"/></svg>
-      <span class="h-logo-accent">Ompage</span> · Pannello
-    </div>
-  </div>
-  <div class="h-site-name" id="site-name">—</div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <a id="btn-preview" href="#" target="_blank" class="btn btn-outline btn-sm">👁️ Vedi il sito</a>
-  </div>
-</header>
-
-<div id="sidebar-overlay" onclick="closeSidebar()"></div>
-<div id="status-bar"></div>
-
-<div class="layout" id="main-layout" style="display:none">
   <nav id="sidebar">
-    <div class="sidebar-nav" id="sidebar-nav"></div>
-    <div class="sidebar-footer">
-      <div class="gh-status-row" id="gh-status-row" onclick="openSettings()">
-        <span>🔗</span>
-        <span id="gh-status-text" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-        <span style="opacity:.6;font-size:10px">✎</span>
-      </div>
-      <button class="btn btn-save-main" id="btn-save" onclick="saveToGitHub()">
-        💾 Salva e metti online
-      </button>
+    <div class="sidebar-label">Sezioni</div>
+    <div id="sidebar-nav"></div>
+    <div class="sidebar-label" style="margin-top:8px;">Strumenti</div>
+    <div class="sidebar-item" id="nav-guida" onclick="showGuida()">
+      <span class="icon">📖</span><span>Guida Bot</span>
     </div>
   </nav>
 
-  <main id="main-content">
-    <div id="sections-wrap"></div>
+  <main id="content">
+    <div id="content-area"></div>
+    <div id="guida-area">
+      <h2>📖 Guida Bot</h2>
+      <p class="guida-sub">Questo testo viene letto dal bot ad ogni conversazione. Aggiornalo qui e il bot lo saprà subito.</p>
+      <textarea id="guida-textarea" placeholder="La guida apparirà qui dopo il caricamento..."></textarea>
+      <div class="guida-actions">
+        <button class="btn-guida-save" id="btn-guida-save" onclick="saveGuida()">💾 Salva guida</button>
+        <span class="guida-status" id="guida-status"></span>
+      </div>
+      <div class="guida-hint">
+        💡 <strong>Come funziona:</strong> Il bot legge questo file dal tuo repository GitHub ogni volta che un cliente fa una domanda. Aggiorna il testo qui sopra e clicca Salva — il bot risponderà con le informazioni aggiornate dalla prossima domanda in poi.
+      </div>
+    </div>
   </main>
+
+  <button id="save-btn" onclick="handleSave()">💾 Salva e Pubblica</button>
+  <button id="chat-btn" onclick="toggleChat()">💬 Assistente</button>
+</div>
+
+<!-- BANNER -->
+<div id="banner"></div>
+
+<!-- CHAT PANEL -->
+<div id="chat-panel">
+  <div id="chat-header">
+    <div>
+      <span class="chat-title">🤖 Assistente Ompage</span>
+      <span class="chat-subtitle">Chiedi qualsiasi cosa sul sito</span>
+    </div>
+    <button id="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div id="chat-messages">
+    <div class="chat-welcome" id="chat-welcome">
+      <strong>Ciao! Sono l'assistente Ompage 👋</strong>
+      Conosco il funzionamento del motore JS, la struttura del config.json e la guida all'installazione. Come posso aiutarti?
+    </div>
+  </div>
+  <div id="chat-input-area">
+    <textarea id="chat-input" placeholder="Scrivi una domanda..." rows="1" onkeydown="chatKeydown(event)" oninput="autoResizeChat(this)"></textarea>
+    <button id="chat-send" onclick="sendMessage()">Invia</button>
+  </div>
 </div>
 
 <script>
 'use strict';
 
-// ════════════════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════════════════
-let CFG = {};
-let ORIG_KEYS = [];
-let GH_SHA = null;
-let IS_DIRTY = false;
+const WORKER_URL = 'https://ompage-assistant.veronicagandiglio.workers.dev/';
 
-const LS = {
-  get token()  { return localStorage.getItem('ompage_token')  || '' },
-  get owner()  { return localStorage.getItem('ompage_owner')  || '' },
-  get repo()   { return localStorage.getItem('ompage_repo')   || '' },
-  set token(v) { localStorage.setItem('ompage_token', v) },
-  set owner(v) { localStorage.setItem('ompage_owner', v) },
-  set repo(v)  { localStorage.setItem('ompage_repo',  v) },
-  clear()      { ['ompage_token','ompage_owner','ompage_repo'].forEach(k => localStorage.removeItem(k)) },
-  get hasAll() { return !!(this.token && this.owner && this.repo) }
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+const state = {
+  token: null,
+  repo: null,
+  workerUrl: null,
+  config: null,
+  configKeys: [],
+  sha: null,
+  guidaSha: null,
+  dirty: false,
+  autosaveTimer: null,
+  bannerTimer: null,
+  chatHistory: [],
+  chatOpen: false,
+  guidaMode: false
 };
 
-// ════════════════════════════════════════════════════════════
-// GITHUB API
-// ════════════════════════════════════════════════════════════
-const GH_BASE = 'https://api.github.com';
-
-function ghHeaders() {
-  return {
-    'Authorization': `token ${LS.token}`,
-    'Accept': 'application/vnd.github.v3+json',
-    'Content-Type': 'application/json'
-  };
-}
-
-function fileUrl() {
-  return `${GH_BASE}/repos/${LS.owner}/${LS.repo}/contents/config.json`;
-}
-
-function b64DecodeUTF8(b64) {
-  const bin = atob(b64.replace(/\s/g, ''));
-  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-  return new TextDecoder('utf-8').decode(bytes);
-}
-
-function b64EncodeUTF8(str) {
-  const bytes = new TextEncoder().encode(str);
-  const bin = Array.from(bytes, b => String.fromCharCode(b)).join('');
-  return btoa(bin);
-}
-
-async function ghGet() {
-  const r = await fetch(fileUrl(), { headers: ghHeaders() });
-  if (r.status === 401) throw new Error('TOKEN_INVALID');
-  if (r.status === 404) throw new Error('REPO_NOT_FOUND');
-  if (!r.ok) throw new Error('HTTP_' + r.status);
-  const data = await r.json();
-  GH_SHA = data.sha;
-  return JSON.parse(b64DecodeUTF8(data.content));
-}
-
-async function ghPut(jsonObj) {
-  if (!GH_SHA) {
-    const r = await fetch(fileUrl(), { headers: ghHeaders() });
-    if (r.ok) { const d = await r.json(); GH_SHA = d.sha; }
-  }
-  const content = b64EncodeUTF8(JSON.stringify(jsonObj, null, 2));
-  const body = {
-    message: 'Aggiornamento config.json — Ompage Pannello',
-    content,
-    ...(GH_SHA ? { sha: GH_SHA } : {})
-  };
-  const r = await fetch(fileUrl(), {
-    method: 'PUT',
-    headers: ghHeaders(),
-    body: JSON.stringify(body)
-  });
-  if (r.status === 401) throw new Error('TOKEN_INVALID');
-  if (r.status === 404) throw new Error('REPO_NOT_FOUND');
-  if (r.status === 409) throw new Error('CONFLICT');
-  if (!r.ok) { const e = await r.json(); throw new Error(e.message || 'HTTP_' + r.status); }
-  const d = await r.json();
-  GH_SHA = d.content.sha;
-}
-
-// ════════════════════════════════════════════════════════════
-// GITHUB FILE UPLOAD
-// ════════════════════════════════════════════════════════════
-const UPLOAD_RULES = {
-  image: {
-    label: 'immagine',
-    accept: ['image/jpeg', 'image/png', 'image/webp'],
-    exts: ['jpg', 'jpeg', 'png', 'webp'],
-    max: 5 * 1024 * 1024
-  },
-  pdf: {
-    label: 'PDF',
-    accept: ['application/pdf'],
-    exts: ['pdf'],
-    max: 10 * 1024 * 1024
-  }
-};
-
-function uploadToGitHub(event, key) {
-  uploadFileToGitHub(event, key, 'image');
-}
-
-function uploadPdfToGitHub(event, key) {
-  uploadFileToGitHub(event, key, 'pdf');
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = ev => resolve(ev.target.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function uploadFileName(key, file) {
-  const ext = (file.name.split('.').pop() || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  return `${key}_${Date.now()}.${ext}`;
-}
-
-async function uploadFileToGitHub(event, key, type) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const rule = UPLOAD_RULES[type];
-  const statusEl = document.getElementById(`upload_status_${key}`);
-  const ext = (file.name.split('.').pop() || '').toLowerCase();
-  const okMime = rule.accept.includes(file.type);
-  const okExt = rule.exts.includes(ext);
-
-  if (!okMime && !okExt) {
-    flash(`❌ File non valido. Carica un ${rule.label} nel formato corretto.`, 'error', 6000);
-    event.target.value = '';
-    return;
-  }
-
-  if (file.size > rule.max) {
-    const mb = Math.round(rule.max / 1024 / 1024);
-    flash(`❌ File troppo grande. Dimensione massima: ${mb} MB.`, 'error', 6000);
-    event.target.value = '';
-    return;
-  }
-
-  if (statusEl) {
-    statusEl.style.color = 'var(--accent)';
-    statusEl.style.display = 'block';
-    statusEl.textContent = `⏳ Caricamento ${rule.label} su GitHub...`;
-  }
-
-  const safeName = uploadFileName(key, file);
-  const filePath = `assets/${safeName}`;
-  const apiUrl = `${GH_BASE}/repos/${LS.owner}/${LS.repo}/contents/${filePath}`;
-
-  try {
-    const content = await fileToBase64(file);
-    const res = await fetch(apiUrl, {
-      method: 'PUT',
-      headers: ghHeaders(),
-      body: JSON.stringify({
-        message: `Upload ${rule.label}: ${key}`,
-        content
-      })
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.message || 'Errore API GitHub');
-    }
-
-    setField(key, filePath);
-    const input = document.getElementById(`f_${key}`);
-    if (input) input.value = filePath;
-    if (type === 'image') updThumb(key);
-    if (type === 'pdf') updFileLabel(key);
-
-    if (statusEl) {
-      statusEl.textContent = `✅ ${rule.label} caricato con successo.`;
-      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-    }
-  } catch (err) {
-    if (statusEl) {
-      statusEl.textContent = `❌ Errore nel caricamento ${rule.label}. Riprova.`;
-      statusEl.style.color = 'var(--error)';
-    }
-    console.error(err);
-  } finally {
-    event.target.value = '';
-  }
-}
-
-
-
-// ════════════════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════════════════
-async function init() {
-  if (!LS.hasAll) { showSetup(); return; }
-  showLoading('Caricamento dal tuo sito GitHub...');
-  try {
-    CFG = await ghGet();
-    ORIG_KEYS = Object.keys(CFG);
-    hideLoading();
-    showApp();
-    buildUI();
-  } catch(e) {
-    hideLoading();
-    if (e.message === 'TOKEN_INVALID') showSetup('Il token GitHub non è valido o è scaduto. Inseriscilo di nuovo.');
-    else if (e.message === 'REPO_NOT_FOUND') showSetup('Repository non trovato. Controlla username e nome repository.');
-    else showSetup('Errore di connessione: ' + e.message);
-  }
-}
-
-// ════════════════════════════════════════════════════════════
-// SCREENS
-// ════════════════════════════════════════════════════════════
-function showLoading(msg) {
-  document.getElementById('loading-text').textContent = msg || 'Caricamento...';
-  document.getElementById('loading-screen').style.display = 'flex';
-  document.getElementById('setup-screen').style.display = 'none';
-  document.getElementById('app-header').style.display = 'none';
-  document.getElementById('main-layout').style.display = 'none';
-}
-
-function hideLoading() {
-  document.getElementById('loading-screen').style.display = 'none';
-}
-
-function showSetup(errMsg) {
-  hideLoading();
-  document.getElementById('setup-screen').style.display = 'flex';
-  document.getElementById('s-token').value = LS.token;
-  document.getElementById('s-owner').value = LS.owner;
-  document.getElementById('s-repo').value  = LS.repo;
-  const e = document.getElementById('setup-err');
-  if (errMsg) { e.textContent = errMsg; e.style.display = 'block'; }
-  else e.style.display = 'none';
-}
-
-function showApp() {
-  document.getElementById('setup-screen').style.display = 'none';
-  document.getElementById('app-header').style.display = 'flex';
-  document.getElementById('main-layout').style.display = 'flex';
-  document.getElementById('gh-status-text').textContent = `${LS.owner}/${LS.repo}`;
-  const previewUrl = `https://${LS.owner}.github.io/${LS.repo}/`;
-  document.getElementById('btn-preview').href = previewUrl;
-  document.getElementById('success-preview-link').href = previewUrl;
-  const sb = document.getElementById('status-bar');
-  sb.innerHTML = `<div class="status-connected"><div class="status-dot"></div>Connesso a <strong>${LS.owner}/${LS.repo}</strong></div>`;
-}
-
-// ════════════════════════════════════════════════════════════
-// SETUP
-// ════════════════════════════════════════════════════════════
-async function doSetup() {
-  const token = document.getElementById('s-token').value.trim();
-  const owner = document.getElementById('s-owner').value.trim();
-  const repo  = document.getElementById('s-repo').value.trim();
-  if (!token) { showSetupErr('Inserisci il Personal Access Token.'); return; }
-  if (!owner) { showSetupErr('Inserisci il tuo username GitHub.'); return; }
-  if (!repo)  { showSetupErr('Inserisci il nome del repository.'); return; }
-  const btn = document.getElementById('setup-btn');
-  btn.textContent = 'Verifica in corso...'; btn.disabled = true;
-  LS.token = token; LS.owner = owner; LS.repo = repo;
-  try {
-    CFG = await ghGet();
-    ORIG_KEYS = Object.keys(CFG);
-    document.getElementById('setup-screen').style.display = 'none';
-    showApp(); buildUI();
-  } catch(e) {
-    LS.clear();
-    if (e.message === 'TOKEN_INVALID') showSetupErr('❌ Token non valido o scaduto. Creane uno nuovo su GitHub.');
-    else if (e.message === 'REPO_NOT_FOUND') showSetupErr('❌ Repository non trovato. Controlla username e nome.');
-    else showSetupErr('❌ Errore: ' + e.message);
-  }
-  btn.textContent = 'Connetti e carica il sito →'; btn.disabled = false;
-}
-
-function showSetupErr(msg) {
-  const e = document.getElementById('setup-err');
-  e.textContent = msg; e.style.display = 'block';
-}
-
-// ════════════════════════════════════════════════════════════
-// SETTINGS MODAL
-// ════════════════════════════════════════════════════════════
-function openSettings() {
-  document.getElementById('m-token').value = LS.token;
-  document.getElementById('m-owner').value = LS.owner;
-  document.getElementById('m-repo').value  = LS.repo;
-  document.getElementById('settings-err').style.display = 'none';
-  document.getElementById('settings-modal').classList.remove('hidden');
-}
-function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
-
-async function saveSettings() {
-  const token = document.getElementById('m-token').value.trim();
-  const owner = document.getElementById('m-owner').value.trim();
-  const repo  = document.getElementById('m-repo').value.trim();
-  const err   = document.getElementById('settings-err');
-  err.style.display = 'none';
-  if (!token||!owner||!repo) { err.textContent='Tutti i campi sono obbligatori.'; err.style.display='block'; return; }
-  LS.token = token; LS.owner = owner; LS.repo = repo; GH_SHA = null;
-  closeSettings();
-  showLoading('Riconnessione...');
-  try {
-    CFG = await ghGet(); ORIG_KEYS = Object.keys(CFG);
-    hideLoading(); showApp(); buildUI();
-    flash('✅ Connessione aggiornata.', 'success');
-  } catch(e) { hideLoading(); showSetup('Errore con le nuove credenziali: ' + e.message); }
-}
-
-function disconnect() {
-  if (!confirm('Sicuro di voler disconnettere il pannello?')) return;
-  LS.clear(); GH_SHA = null; closeSettings(); location.reload();
-}
-
-// ════════════════════════════════════════════════════════════
-// SAVE TO GITHUB
-// ════════════════════════════════════════════════════════════
-async function saveToGitHub() {
-  if (!validate()) return;
-  syncDerivedFields();
-  fixUrlsTels();
-  const ordered = {};
-  ORIG_KEYS.forEach(k => { ordered[k] = CFG[k]; });
-  const btn = document.getElementById('btn-save');
-  btn.textContent = '⏳ Salvataggio in corso...'; btn.disabled = true;
-  try {
-    await ghPut(ordered);
-    IS_DIRTY = false;
-    document.getElementById('success-banner').style.display = 'flex';
-  } catch(e) {
-    let msg = '❌ Errore nel salvataggio.';
-    if (e.message === 'TOKEN_INVALID') msg = '❌ Token non valido. Aggiorna le credenziali (⚙️ in basso a sinistra).';
-    else if (e.message === 'REPO_NOT_FOUND') msg = '❌ Repository non trovato.';
-    else if (e.message === 'CONFLICT') msg = '❌ Conflitto versione: ricarica il pannello e riprova.';
-    else msg = '❌ ' + e.message;
-    flash(msg, 'error', 8000);
-  }
-  btn.textContent = '💾 Salva e metti online'; btn.disabled = false;
-}
-
-// ════════════════════════════════════════════════════════════
-// SECTIONS
-// ════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════
+   SECTIONS
+═══════════════════════════════════════ */
 const SECTIONS = [
-  {id:'impostazioni',icon:'⚙️',label:'Impostazioni'},
-  {id:'seo',icon:'🔍',label:'SEO & Metadati'},
-  {id:'navbar',icon:'🧭',label:'Navbar'},
-  {id:'promozioni',icon:'📣',label:'Promozioni'},
-  {id:'hero',icon:'🏠',label:'Hero'},
-  {id:'chi_siamo',icon:'👥',label:'Chi Siamo'},
-  {id:'servizi',icon:'🛠️',label:'Servizi'},
-  {id:'galleria',icon:'🖼️',label:'Galleria'},
-  {id:'recensioni',icon:'⭐',label:'Recensioni'},
-  {id:'faq',icon:'❓',label:'FAQ'},
-  {id:'footer',icon:'📍',label:'Footer & Contatti'},
-  {id:'extra',icon:'🔧',label:'Campi Extra'},
+  { id:'generali', label:'Impostazioni Generali', icon:'⚙️',
+    match: k => ['sito_in_bozza_watermark','crediti_ompage_footer'].includes(k) || k.startsWith('colore_') || k.startsWith('tema_') },
+  { id:'seo', label:'SEO & Metadati', icon:'🔍', match: k => k.startsWith('seo_')||k.startsWith('og_')||k.startsWith('schema_') },
+  { id:'navbar', label:'Navbar', icon:'🧭', match: k => k.startsWith('navbar_') },
+  { id:'promozioni', label:'Promozioni', icon:'📣', match: k => k.startsWith('barra_')||k.startsWith('popup_') },
+  { id:'hero', label:'Hero', icon:'🏠', match: k => k.startsWith('hero_') },
+  { id:'chi_siamo', label:'Chi Siamo', icon:'👥', match: k => k.startsWith('chi_siamo_') },
+  { id:'vantaggi', label:'Vantaggi', icon:'✨', match: k => k.startsWith('vantaggi_')||k.startsWith('vantaggio_') },
+  { id:'servizi', label:'Servizi', icon:'🛠️', match: k => k.startsWith('servizi_')||k.startsWith('servizio_')||k.startsWith('pdf_menu_') },
+  { id:'galleria', label:'Galleria', icon:'🖼️', match: k => k.startsWith('galleria_')||/^foto_\d+_/.test(k)||/^foto_estesa_\d+_/.test(k) },
+  { id:'prima_dopo', label:'Prima / Dopo', icon:'🔀', match: k => k.startsWith('prima_dopo_') },
+  { id:'recensioni', label:'Recensioni', icon:'⭐', match: k => k.startsWith('recensioni_')||k.startsWith('recensione_') },
+  { id:'faq', label:'FAQ', icon:'❓', match: k => k.startsWith('faq_') },
+  { id:'footer', label:'Footer & Contatti', icon:'📍', match: k => k.startsWith('footer_')||k.startsWith('prenotazione_')||k.startsWith('badge_')||k.startsWith('cookie_')||k.startsWith('privacy_') },
+  { id:'extra', label:'Campi Extra', icon:'🔧', match: () => true }
 ];
 
-const LMAP = {
-  sito_in_bozza_watermark:'Sito in bozza (watermark)',
-  crediti_ompage_footer:'Mostra crediti Ompage',
-  tema_tipografico:'Font pairing',
-  tema_palette:'Palette colori',
-  seo_titolo:'Titolo pagina (SEO)',
-  seo_descrizione:'Descrizione pagina (SEO)',
-  og_immagine:'Immagine anteprima social',
-  schema_nome:'Nome attività',
-  schema_indirizzo:'Indirizzo',
-  schema_telefono:'Telefono',
-  schema_orari:'Orari apertura',
-  navbar_logo_tipo:'Tipo logo navbar',
-  navbar_logo_testo:'Testo logo',
-  navbar_logo_immagine:'Immagine logo',
-  navbar_voce_chi_siamo:'Menu — Chi Siamo',
-  navbar_voce_servizi:'Menu — Servizi',
-  navbar_voce_galleria:'Menu — Galleria',
-  navbar_voce_recensioni:'Menu — Recensioni',
-  navbar_voce_faq:'Menu — FAQ',
-  navbar_voce_contatti:'Menu — Contatti',
-  barra_attiva:'Barra promo attiva',
-  barra_testo:'Testo barra',
-  barra_scadenza:'Scadenza barra',
-  barra_cta_testo:'Testo bottone barra',
-  barra_cta_tipo:'Tipo bottone barra',
-  barra_cta_contatto:'Contatto/URL bottone',
-  popup_attivo:'Popup attivo',
-  popup_testo:'Testo popup',
-  popup_scadenza:'Scadenza popup',
-  popup_cta_testo:'Testo bottone popup',
-  popup_cta_tipo:'Tipo bottone popup',
-  popup_cta_contatto:'Contatto/URL popup',
-  hero_layout:'Layout hero',
-  hero_foto:'Foto hero',
-  hero_placeholder:'Placeholder foto hero',
-  hero_titolo:'Titolo principale',
-  hero_sottotitolo:'Sottotitolo',
-  hero_cta_testo:'Testo CTA',
-  hero_cta_tipo:'Tipo CTA',
-  hero_cta_contatto:'Contatto/URL CTA',
-  chi_siamo_attivo:'Sezione attiva',
-  chi_siamo_layout:'Layout',
-  chi_siamo_titolo:'Titolo',
-  chi_siamo_testo:'Testo',
-  chi_siamo_foto:'Foto',
-  chi_siamo_placeholder:'Placeholder foto',
-  servizi_attivi:'Sezione attiva',
-  servizi_layout:'Layout',
-  servizi_titolo:'Titolo sezione',
-  pdf_menu_attivo:'PDF listino attivo',
-  pdf_menu_testo_bottone:'Testo bottone PDF',
-  pdf_menu_url:'PDF listino',
-  galleria_attiva:'Galleria attiva',
-  galleria_titolo:'Titolo galleria',
-  galleria_estesa_attiva:'Galleria estesa attiva',
-  galleria_estesa_titolo:'Titolo galleria estesa',
-  galleria_estesa_testo_bottone:'Testo bottone',
-  recensioni_attive:'Sezione attiva',
-  recensioni_titolo:'Titolo sezione',
-  footer_nome:'Nome attività',
-  footer_indirizzo:'Indirizzo',
-  footer_telefono:'Telefono',
-  footer_whatsapp:'WhatsApp',
-  footer_email:'Email',
-  footer_cta_tipo:'Tipo CTA',
-  footer_cta_testo:'Testo bottone',
-  footer_mappa_attiva:'Mappa attiva',
-  footer_mappa_url:'URL mappa',
-  footer_orari:'Orari',
-  footer_instagram:'Instagram',
-  footer_facebook:'Facebook',
-};
-
-const SMAP={nome:'Nome',testo:'Testo',descrizione:'Descrizione',foto:'Foto',placeholder:'Placeholder',
-  prezzo:'Prezzo',attivo:'Attivo',attiva:'Attiva',stelle:'Stelle',domanda:'Domanda',risposta:'Risposta',
-  url:'URL',didascalia:'Didascalia',titolo:'Titolo',tipo:'Tipo',contatto:'Contatto',layout:'Layout',
-  scadenza:'Scadenza',cta_testo:'Testo CTA',cta_tipo:'Tipo CTA',cta_contatto:'Contatto CTA'};
-
-const ADMIN_ONLY_KEYS = new Set([
-  'sito_in_bozza_watermark'
-]);
-
-const DERIVED_KEYS = new Set([
-  'schema_nome',
-  'schema_indirizzo',
-  'schema_telefono',
-  'schema_orari'
-]);
-
-function isHiddenKey(key) {
-  return ADMIN_ONLY_KEYS.has(key) || DERIVED_KEYS.has(key) || key.includes('_placeholder');
-}
-
-function lbl(key){
-  if(LMAP[key])return LMAP[key];
-  let m;
-  if(m=key.match(/^servizio_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Servizio '+m[1];
-  if(m=key.match(/^recensione_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Recensione '+m[1];
-  if(m=key.match(/^foto_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Foto '+m[1];
-  if(m=key.match(/^foto_estesa_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Foto estesa '+m[1];
-  if(m=key.match(/^faq_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — FAQ '+m[1];
-  if(m=key.match(/^chi_siamo_passo_(\d+)_(.+)$/))return(SMAP[m[2]]||uc(m[2]))+' — Passo '+m[1];
-  return uc(key.replace(/_/g,' '));
-}
-function uc(s){return s.replace(/\b\w/g,c=>c.toUpperCase())}
-
-const SELOPTS={
-  tema_tipografico:['LUSSO_SERIF','MODERNO_TECH','CLASSICO','EDITORIALE_MODERNO'],
-  tema_palette:['CHIARO_MINIMALE','DARK_ELEGANTE','NATURA_PASTELLO','ROMANTICO'],
+const SELECT_OPTIONS = {
   hero_layout:['CON_FOTO_SFONDO','SENZA_FOTO'],
   chi_siamo_layout:['FOTO_E_TESTO','TRE_PASSI','SOLO_TESTO'],
   servizi_layout:['GRIGLIA','LISTA'],
@@ -797,517 +380,688 @@ const SELOPTS={
   hero_cta_tipo:['WHATSAPP','TELEFONO','URL'],
   barra_cta_tipo:['WHATSAPP','TELEFONO','URL'],
   popup_cta_tipo:['WHATSAPP','TELEFONO','URL'],
+  badge_tipo:['WHATSAPP','TELEFONO'],
+  tema_palette:['DARK_ELEGANTE','CREMA_NOTTE','CHIARO_MINIMALE','NATURA_PASTELLO'],
+  tema_tipografico:['LUSSO_SERIF','EDITORIALE_MODERNO','CLASSICO','MODERNO'],
+  popup_attivo:['SI','NO'],
+  prenotazione_attiva:['SI','NO'],
+  badge_attivo:['SI','NO']
 };
 
-const OPTION_LABELS = {
-  tema_tipografico: {
-    LUSSO_SERIF: 'Elegante serif — lusso artigianale',
-    MODERNO_TECH: 'Moderno pulito — premium contemporaneo',
-    CLASSICO: 'Classico editoriale — raffinato e leggibile',
-    EDITORIALE_MODERNO: 'Editoriale moderno — boutique creativa'
-  },
-  tema_palette: {
-    CHIARO_MINIMALE: 'Chiaro minimale — bianco, nero, sabbia',
-    DARK_ELEGANTE: 'Scuro elegante — nero caldo e oro',
-    NATURA_PASTELLO: 'Natura pastello — verde salvia',
-    ROMANTICO: 'Romantico editoriale — lavanda e blu'
-  }
+/* ═══════════════════════════════════════
+   LABELS
+═══════════════════════════════════════ */
+const LABELS = {
+  sito_in_bozza_watermark:'Watermark "Sito di prova"',crediti_ompage_footer:'Crediti Ompage nel footer',
+  tema_palette:'Palette colori',tema_tipografico:'Font pairing',
+  colore_accent:'Colore Accent',colore_sfondo:'Colore Sfondo',colore_testo:'Colore Testo',colore_superficie:'Colore Superficie',
+  seo_titolo:'Titolo SEO',seo_descrizione:'Descrizione SEO',og_immagine:'Immagine Open Graph',
+  schema_nome:'Nome Attività',schema_indirizzo:'Indirizzo (Schema)',schema_telefono:'Telefono (Schema)',schema_orari:'Orari (Schema)',
+  navbar_logo_tipo:'Tipo Logo',navbar_logo_testo:'Testo Logo',navbar_logo_immagine:'Immagine Logo',
+  barra_attiva:'Barra Attiva',barra_testo:'Testo Barra',barra_scadenza:'Scadenza (YYYY-MM-DD)',
+  barra_cta_testo:'Testo CTA',barra_cta_tipo:'Tipo CTA',barra_cta_contatto:'Contatto CTA',
+  popup_attivo:'Popup Attivo',popup_testo:'Testo Popup',popup_scadenza:'Scadenza Popup',
+  popup_cta_testo:'Testo CTA Popup',popup_cta_tipo:'Tipo CTA',popup_cta_contatto:'Contatto CTA',
+  hero_layout:'Layout Hero',hero_foto:'Foto Hero',hero_placeholder:'Placeholder Hero',
+  hero_titolo:'Titolo',hero_sottotitolo:'Sottotitolo',
+  hero_cta_testo:'Testo Bottone',hero_cta_tipo:'Tipo CTA',hero_cta_contatto:'Contatto CTA',
+  hero_orari_attivi:'Mostra Orari',
+  chi_siamo_attivo:'Sezione Attiva',chi_siamo_layout:'Layout',chi_siamo_titolo:'Titolo',
+  chi_siamo_testo:'Testo',chi_siamo_citazione:'Citazione',chi_siamo_nome:'Nome',chi_siamo_ruolo:'Ruolo',
+  chi_siamo_foto:'Foto',chi_siamo_placeholder:'Placeholder',
+  vantaggi_attivi:'Sezione Attiva',vantaggi_titolo:'Titolo',
+  servizi_attivi:'Sezione Attiva',servizi_layout:'Layout',servizi_titolo:'Titolo',
+  pdf_menu_attivo:'PDF Menu Attivo',pdf_menu_testo_bottone:'Testo Bottone PDF',pdf_menu_url:'URL PDF',
+  galleria_attiva:'Galleria Attiva',galleria_titolo:'Titolo Galleria',
+  galleria_estesa_attiva:'Galleria Estesa Attiva',galleria_estesa_titolo:'Titolo Estesa',galleria_estesa_testo_bottone:'Testo Bottone',
+  prima_dopo_attiva:'Sezione Attiva',prima_dopo_titolo:'Titolo',
+  recensioni_attive:'Sezione Attiva',recensioni_titolo:'Titolo',
+  footer_nome:'Nome Attività',footer_indirizzo:'Indirizzo',footer_telefono:'Telefono',footer_whatsapp:'WhatsApp',footer_email:'Email',
+  footer_cta_tipo:'Tipo CTA',footer_cta_testo:'Testo CTA',footer_mappa_attiva:'Mappa Attiva',footer_orari:'Orari',
+  footer_instagram:'Instagram URL',footer_facebook:'Facebook URL',
+  prenotazione_attiva:'Prenotazione Attiva',prenotazione_url:'URL Prenotazione',prenotazione_cta:'Testo CTA',
+  badge_attivo:'Badge WhatsApp Attivo',badge_tipo:'Tipo Badge',
+  cookie_policy_testo:'Cookie Policy',privacy_policy_testo:'Privacy Policy',
 };
 
-const MAX_LENGTHS = [
-  ['seo_titolo', 60],
-  ['seo_descrizione', 155],
-  ['navbar_logo_testo', 55],
-  [/^navbar_voce_/, 18],
-  ['barra_testo', 120],
-  ['barra_cta_testo', 28],
-  ['popup_testo', 180],
-  ['popup_cta_testo', 28],
-  ['hero_titolo', 72],
-  ['hero_sottotitolo', 150],
-  ['hero_cta_testo', 28],
-  ['chi_siamo_titolo', 72],
-  ['chi_siamo_testo', 650],
-  [/^chi_siamo_passo_\d+_titolo$/, 55],
-  [/^chi_siamo_passo_\d+_testo$/, 220],
-  ['servizi_titolo', 72],
-  [/^servizio_\d+_nome$/, 45],
-  [/^servizio_\d+_descrizione$/, 220],
-  [/^servizio_\d+_prezzo$/, 35],
-  ['pdf_menu_testo_bottone', 36],
-  ['galleria_titolo', 72],
-  ['galleria_estesa_titolo', 72],
-  ['galleria_estesa_testo_bottone', 36],
-  [/^foto_\d+_didascalia$/, 85],
-  ['recensioni_titolo', 72],
-  [/^recensione_\d+_nome$/, 45],
-  [/^recensione_\d+_testo$/, 280],
-  [/^faq_\d+_domanda$/, 110],
-  [/^faq_\d+_risposta$/, 360],
-  ['footer_nome', 45],
-  ['footer_indirizzo', 110],
-  ['footer_cta_testo', 28],
-  ['footer_orari', 140]
-];
-
-function optionLabel(key, value) {
-  return OPTION_LABELS[key]?.[value] || value.replace(/_/g, ' ');
-}
-
-function maxLen(key) {
-  for (const [rule, limit] of MAX_LENGTHS) {
-    if (typeof rule === 'string' && rule === key) return limit;
-    if (rule instanceof RegExp && rule.test(key)) return limit;
+function getLabel(key) {
+  if (LABELS[key]) return LABELS[key];
+  const patterns = [
+    [/^servizio_(\d+)_(.+)$/, (n,f) => `Servizio ${n} — ${({attivo:'Attivo',nome:'Nome',descrizione:'Descrizione',prezzo:'Prezzo',foto:'Foto',placeholder:'Placeholder'}[f]||f)}`],
+    [/^vantaggio_(\d+)_(.+)$/, (n,f) => `Vantaggio ${n} — ${f}`],
+    [/^foto_estesa_(\d+)_(.+)$/, (n,f) => `Foto Estesa ${n} — ${({attiva:'Attiva',url:'Immagine',placeholder:'Placeholder'}[f]||f)}`],
+    [/^foto_(\d+)_(.+)$/, (n,f) => `Foto ${n} — ${({attiva:'Attiva',url:'Immagine',didascalia:'Didascalia',placeholder:'Placeholder'}[f]||f)}`],
+    [/^prima_dopo_(\d+)_(.+)$/, (n,f) => `Prima/Dopo ${n} — ${f}`],
+    [/^recensione_(\d+)_(.+)$/, (n,f) => `Recensione ${n} — ${({attiva:'Attiva',nome:'Nome',testo:'Testo',stelle:'Stelle'}[f]||f)}`],
+    [/^faq_(\d+)_(.+)$/, (n,f) => `FAQ ${n} — ${({attiva:'Attiva',domanda:'Domanda',risposta:'Risposta'}[f]||f)}`],
+    [/^chi_siamo_passo_(\d+)_(.+)$/, (n,f) => `Passo ${n} — ${f}`],
+    [/^navbar_voce_(.+)$/, (_,f) => `Voce navbar "${f}"`],
+  ];
+  for (const [re, fn] of patterns) {
+    const m = key.match(re); if (m) return fn(m[1], m[2]);
   }
-  return 0;
+  return key.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
 }
 
-function isImageField(key) {
-  return key === 'og_immagine' ||
-    key.includes('_foto') ||
-    key.includes('_immagine') ||
-    key.includes('sfondo_astratto') ||
-    /^foto_\d+_url$/.test(key) ||
-    /^foto_estesa_\d+_url$/.test(key);
+/* ═══════════════════════════════════════
+   FIELD TYPE
+═══════════════════════════════════════ */
+function getFieldType(key, value) {
+  if (SELECT_OPTIONS[key]) return { type:'SELECT', options:SELECT_OPTIONS[key] };
+  if (value === 'SI' || value === 'NO') return { type:'TOGGLE' };
+  if (key.includes('colore_')) return { type:'COLOR' };
+  if (key.includes('_testo')||key.includes('_descrizione')||key.includes('_risposta')||key.includes('_sottotitolo')||key==='cookie_policy_testo'||key==='privacy_policy_testo') return { type:'TEXTAREA' };
+  if (key.includes('_url')||key.includes('_mappa')||key.includes('_instagram')||key.includes('_facebook')) return { type:'URL' };
+  if (key.includes('_telefono')||key.includes('_whatsapp')||key.includes('_contatto')) return { type:'TEL' };
+  if (key.includes('_foto')||key.includes('_placeholder')||key.includes('_immagine')||key==='og_immagine') return { type:'IMG_PATH' };
+  return { type:'TEXT' };
 }
 
-function isPdfField(key) {
-  return key === 'pdf_menu_url';
-}
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function ftype(key){
-  if(isPdfField(key))return'pdfpath';
-  if(isImageField(key))return'imgpath';
-  if(SELOPTS[key]||key.startsWith('tema_'))return'select';
+/* ═══════════════════════════════════════
+   RENDER FIELD
+═══════════════════════════════════════ */
+function renderField(key, value) {
+  const { type, options } = getFieldType(key, value);
+  const label = getLabel(key);
+  const eid = `field_${key}`;
+  const val = value ?? '';
+  const dimmed = isFieldDimmed(key) ? ' dimmed' : '';
+  let inner = '';
 
-  const v=CFG[key];
-  if(v==='SI'||v==='NO'||key.endsWith('_attivo')||key.endsWith('_attiva')||key.endsWith('_attivi'))return'toggle';
-  if(['_testo','_descrizione','_risposta','_sottotitolo'].some(t=>key.includes(t)))return'textarea';
-  if(key.includes('_url')||key.includes('_mappa')||key.includes('_instagram')||key.includes('_facebook')||key==='og_immagine')return'url';
-  if(key.includes('_telefono')||key.includes('_whatsapp')||key.includes('_contatto'))return'tel';
-  if(key.includes('_scadenza'))return'date';
-  return'text';
-}
-
-function secOf(key){
-  // Posiziona i temi dentro Impostazioni
-  if(key.startsWith('tema_')||['sito_in_bozza_watermark','crediti_ompage_footer'].includes(key))return'impostazioni';
-  
-  if(key.startsWith('seo_')||key.startsWith('og_')||key.startsWith('schema_'))return'seo';
-  if(key.startsWith('navbar_'))return'navbar';
-  if(key.startsWith('barra_')||key.startsWith('popup_'))return'promozioni';
-  if(key.startsWith('hero_'))return'hero';
-  if(key.startsWith('chi_siamo_'))return'chi_siamo';
-  if(key.startsWith('servizi_')||/^servizio_\d+_/.test(key)||key.startsWith('pdf_menu_'))return'servizi';
-  if(key.startsWith('galleria_')||/^foto_\d+_/.test(key)||/^foto_estesa_\d+_/.test(key))return'galleria';
-  if(key.startsWith('recensioni_')||/^recensione_\d+_/.test(key))return'recensioni';
-  if(/^faq_\d+_/.test(key))return'faq';
-  if(key.startsWith('footer_'))return'footer';
-  return'extra';
-}
-
-function limitAttr(key) {
-  const limit = maxLen(key);
-  return limit ? ` maxlength="${limit}"` : '';
-}
-
-function countHtml(key, val) {
-  const limit = maxLen(key);
-  if (!limit) return '';
-  const len = String(val || '').length;
-  return `<div class="char-count${len>limit?' over':''}" id="cc_${key}">${len}/${limit}</div>`;
-}
-
-function rf(key,val){
-  const t=ftype(key),label=lbl(key),id='f_'+key;
-  val=val==null?'':val;
-
-  if(t==='toggle'){
-    const on=val==='SI';
-    return`<div class="fw" id="fw_${key}">
-      <div class="tw">
-        <div class="tt${on?' on':''}" id="tt_${key}" onclick="togField('${key}')"><div class="tthumb"></div></div>
-        <span class="fl" style="margin:0">${h(label)}</span>
-        <span class="tv${on?' on':''}" id="tv_${key}">${on?'SI':'NO'}</span>
-      </div>
-      <input type="hidden" id="${id}" value="${h(val)}" data-key="${key}">
-      <span class="fk" style="margin-top:4px">${key}</span>
-    </div>`;
-  }
-
-  let inp='';
-  if(t==='select'){
-    const opts=SELOPTS[key].map(o=>`<option value="${o}"${val===o?' selected':''}>${optionLabel(key,o)}</option>`).join('');
-    inp=`<select class="fsel" id="${id}" data-key="${key}" onchange="setField('${key}',this.value)">${opts}</select>`;
-  } else if(t==='textarea'){
-    const hasLimit=!!maxLen(key);
-    inp=`<textarea class="fta" id="${id}" data-key="${key}" rows="3"${limitAttr(key)}
-      oninput="setField('${key}',this.value);ar(this)${hasLimit?`;updateCC('${key}')`:''}">
-${h(val)}</textarea>${countHtml(key,val)}`;
-  } else if(t==='url'){
-    inp=`
-      <input type="url" class="fi" id="${id}" data-key="${key}" value="${ha(val)}"${limitAttr(key)} placeholder="https://www.esempio.it/..." oninput="setField('${key}',this.value)${maxLen(key)?`;updateCC('${key}')`:''}">
-      <div class="dr">Inserisci l'indirizzo web completo (deve iniziare con https://)</div>`;
-  } else if(t==='tel'){
-    inp=`<input type="tel" class="fi" id="${id}" data-key="${key}" value="${ha(val)}"${limitAttr(key)} placeholder="+39 333 1234567" oninput="setField('${key}',this.value)${maxLen(key)?`;updateCC('${key}')`:''}">${countHtml(key,val)}`;
-  } else if(t==='date'){
-    inp=`<input type="date" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" oninput="setField('${key}',this.value);updDr('${key}')">
-    <div class="dr" id="dr_${key}">${val?fmtDate(val):''}</div>`;
-  } else if(t==='imgpath'){
-    const hasThumb=val&&val.trim()!=='';
-    inp=`
-      <div class="iw">
-        <img src="${ha(val)}" class="ithumb" id="ithumb_${key}" ${hasThumb?'':'style="display:none"'} onerror="this.style.display='none';document.getElementById('iph_${key}').style.display='flex'">
-        <div class="ipholder" id="iph_${key}" ${hasThumb?'style="display:none"':''}>📷</div>
-        <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
-           <input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" oninput="setField('${key}',this.value);updThumb('${key}')" style="font-size:12px; padding:6px; color:var(--text-secondary);" readonly>
-           <input type="file" id="file_${key}" accept="image/jpeg, image/png, image/webp" style="display:none" onchange="uploadToGitHub(event, '${key}')">
-           <div style="display:flex; gap:8px;">
-             <button class="btn btn-outline btn-sm" onclick="document.getElementById('file_${key}').click()">Carica immagine</button>
-             <button class="btn btn-ghost btn-sm" onclick="clrImg('${key}')" title="Svuota immagine">✕ Rimuovi</button>
-           </div>
-        </div>
-      </div>
-      <div class="dr" id="upload_status_${key}" style="color:var(--accent); display:none;">⏳ Caricamento in corso... attendi.</div>`;
-  } else if(t==='pdfpath'){
-    const fileName = val ? val.split('/').pop() : 'Nessun PDF caricato';
-    inp=`
-      <div class="file-pill">
-        <span>📄</span>
-        <span class="file-pill-name" id="file_label_${key}">${h(fileName)}</span>
-      </div>
-      <input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}" style="font-size:12px; padding:6px; color:var(--text-secondary); margin-top:6px;" readonly>
-      <input type="file" id="file_${key}" accept="application/pdf,.pdf" style="display:none" onchange="uploadPdfToGitHub(event, '${key}')">
-      <div style="display:flex; gap:8px; margin-top:6px;">
-        <button class="btn btn-outline btn-sm" onclick="document.getElementById('file_${key}').click()">Carica PDF</button>
-        <button class="btn btn-ghost btn-sm" onclick="clrFile('${key}')" title="Svuota PDF">✕ Rimuovi</button>
-      </div>
-      <div class="dr" id="upload_status_${key}" style="color:var(--accent); display:none;">⏳ Caricamento in corso... attendi.</div>
-      <div class="field-help">Il file viene salvato nella cartella <code>assets</code> del repository.</div>`;
+  if (type==='TOGGLE') {
+    inner = `<div class="toggle-wrap"><label class="toggle"><input type="checkbox" id="${eid}" data-key="${key}" data-type="TOGGLE" ${val==='SI'?'checked':''} onchange="markDirty();onToggleChange('${key}',this)"><div class="toggle-track"></div></label><span class="toggle-label-text">${val==='SI'?'Attivo (SI)':'Non attivo (NO)'}</span></div>`;
+  } else if (type==='SELECT') {
+    const opts = options.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+    inner = `<select id="${eid}" data-key="${key}" data-type="SELECT" onchange="markDirty()">${opts}</select>`;
+  } else if (type==='COLOR') {
+    inner = `<div class="color-wrap"><div class="color-swatch"><input type="color" id="${eid}_picker" value="${val||'#000000'}" oninput="syncColorHex('${key}',this.value)" onchange="markDirty()"></div><input type="text" id="${eid}" class="color-hex" data-key="${key}" data-type="COLOR" value="${esc(val)}" maxlength="9" placeholder="#000000" oninput="syncColorPicker('${key}',this.value)" onchange="markDirty()"></div>`;
+  } else if (type==='TEXTAREA') {
+    inner = `<textarea id="${eid}" data-key="${key}" data-type="TEXTAREA" rows="3" oninput="autoResize(this);markDirty()">${esc(val)}</textarea>`;
+  } else if (type==='URL') {
+    inner = `<input type="url" id="${eid}" data-key="${key}" data-type="URL" value="${esc(val)}" placeholder="https://" oninput="markDirty()">`;
+  } else if (type==='TEL') {
+    inner = `<input type="tel" id="${eid}" data-key="${key}" data-type="TEL" value="${esc(val)}" placeholder="+39 333 0000000" oninput="markDirty()">`;
+  } else if (type==='IMG_PATH') {
+    const thumb = val ? `<img class="img-thumb" id="thumb_${key}" src="${esc(rawUrl(val))}" onerror="this.style.display='none';document.getElementById('thumb_ph_${key}').style.display='flex'" alt="">` : '';
+    const ph = `<div class="img-thumb-placeholder" id="thumb_ph_${key}" style="${val?'display:none':''}">🖼️</div>`;
+    inner = `<div class="img-wrap">${thumb}${ph}<div class="img-input-wrap"><input type="text" id="${eid}" data-key="${key}" data-type="IMG_PATH" value="${esc(val)}" placeholder="assets/immagine.jpg" oninput="markDirty();updateThumb('${key}')"><button class="btn-upload" onclick="triggerUpload('${key}')">📎 Carica</button><input type="file" id="file_${key}" accept="image/*" style="display:none" onchange="handleUpload('${key}',this)"></div></div><div class="upload-progress" id="prog_${key}"></div>`;
   } else {
-    inp=`<input type="text" class="fi" id="${id}" data-key="${key}" value="${ha(val)}"${limitAttr(key)} oninput="setField('${key}',this.value)${maxLen(key)?`;updateCC('${key}')`:''}">${countHtml(key,val)}`;
+    inner = `<input type="text" id="${eid}" data-key="${key}" data-type="TEXT" value="${esc(val)}" oninput="markDirty()">`;
   }
 
-  return`<div class="fw" id="fw_${key}">
-    <label class="fl" for="${id}">${h(label)}</label>
-    <span class="fk">${key}</span>
-    ${inp}
-  </div>`;
+  return `<div class="field${dimmed}" id="fieldwrap_${key}"><div class="field-label"><span class="field-label-text">${esc(label)}</span><span class="field-key">${esc(key)}</span></div>${inner}<div class="field-error" id="err_${key}"></div></div>`;
 }
 
-function sHdr(i,t,s){return`<div class="section-hdr"><div class="section-title">${i} ${h(t)}</div><div class="section-subtitle">${h(s)}</div></div>`}
-function gbox(t,html){return`<div class="gbox"><div class="gbox-title">${t}</div>${html}</div>`}
-
-function makeCard(cardId,toggleKey,name,body){
-  const on=CFG[toggleKey]==='SI';
-  return`<div class="card" id="${cardId}">
-    <div class="card-hdr" onclick="toggleCard('${cardId}')">
-      <div class="tt${on?' on':''}" id="tt_${toggleKey}" onclick="event.stopPropagation();togField('${toggleKey}')" style="flex-shrink:0"><div class="tthumb"></div></div>
-      <input type="hidden" id="f_${toggleKey}" value="${on?'SI':'NO'}" data-key="${toggleKey}">
-      <span class="tv${on?' on':''}" id="tv_${toggleKey}">${on?'SI':'NO'}</span>
-      <div class="card-name">${h(name)}</div>
-      <span class="card-chev">▼</span>
-    </div>
-    <div class="card-body">${body}</div>
-  </div>`;
-}
-
-function buildImpostazioni(keys){
-  const temi=keys.filter(k=>k.startsWith('tema_'));
-  const rest=keys.filter(k=>!k.startsWith('tema_'));
-  return sHdr('⚙️','Impostazioni','Configurazioni generali')
-    +rest.map(k=>rf(k,CFG[k])).join('')
-    +(temi.length?gbox('🎨 Stile Grafico',temi.map(k=>rf(k,CFG[k])).join('')):'');
-}
-function buildSeo(keys){
-  const schema=keys.filter(k=>k.startsWith('schema_'));
-  const main=keys.filter(k=>!k.startsWith('schema_'));
-  return sHdr('🔍','SEO & Metadati','Ottimizzazione motori di ricerca')
-    +main.map(k=>rf(k,CFG[k])).join('')
-    +(schema.length?gbox('📋 Schema.org',schema.map(k=>rf(k,CFG[k])).join('')):'');
-}
-function buildNavbar(keys){
-  const logo=keys.filter(k=>k.startsWith('navbar_logo_'));
-  const voci=keys.filter(k=>k.startsWith('navbar_voce_'));
-  return sHdr('🧭','Navbar','Menu di navigazione')
-    +(logo.length?gbox('Logo',logo.map(k=>rf(k,CFG[k])).join('')):'')
-    +(voci.length?gbox('Voci del menu',voci.map(k=>rf(k,CFG[k])).join('')):'');
-}
-function buildPromozioni(keys){
-  const barra=keys.filter(k=>k.startsWith('barra_'));
-  const popup=keys.filter(k=>k.startsWith('popup_'));
-  return sHdr('📣','Promozioni','Barra e popup')
-    +(barra.length?gbox('🔔 Barra promo',barra.map(k=>rf(k,CFG[k])).join('')):'')
-    +(popup.length?gbox('💬 Popup emergenza',popup.map(k=>rf(k,CFG[k])).join('')):'');
-}
-function buildHero(keys){return sHdr('🏠','Hero','Sezione principale')+keys.map(k=>rf(k,CFG[k])).join('')}
-function buildChiSiamo(keys){
-  const passi=keys.filter(k=>/^chi_siamo_passo_\d+_/.test(k));
-  const main=keys.filter(k=>!passi.includes(k));
-  const nums=[...new Set(passi.map(k=>k.match(/passo_(\d+)_/)[1]))].sort();
-  let passiHtml='';
-  nums.forEach(n=>{
-    passiHtml+=`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border-section)">
-      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">Passo ${n}</div>
-      ${passi.filter(k=>k.includes(`_passo_${n}_`)).map(k=>rf(k,CFG[k])).join('')}</div>`;
-  });
-  return sHdr('👥','Chi Siamo','Sezione di presentazione')
-    +main.map(k=>rf(k,CFG[k])).join('')
-    +(passi.length?gbox('👣 Passi (layout TRE_PASSI)',passiHtml):'');
-}
-function buildServizi(keys){
-  const top=keys.filter(k=>k.startsWith('servizi_'));
-  const pdf=keys.filter(k=>k.startsWith('pdf_menu_'));
-  const nums=[...new Set(keys.filter(k=>/^servizio_\d+_/.test(k)).map(k=>k.match(/^servizio_(\d+)_/)[1]))].sort((a,b)=>+a-+b);
-  return sHdr('🛠️','Servizi','Servizi offerti')
-    +top.map(k=>rf(k,CFG[k])).join('')
-    +(pdf.length?gbox('📄 PDF Listino',pdf.map(k=>rf(k,CFG[k])).join('')):'')
-    +(nums.length?`<div class="divider"></div><div class="sub-label">Singoli servizi</div>`
-      +nums.map(n=>{
-        const atk=`servizio_${n}_attivo`;
-        const body=keys.filter(k=>k.startsWith(`servizio_${n}_`)&&k!==atk).map(k=>rf(k,CFG[k])).join('');
-        return makeCard(`card_svc_${n}`,atk,CFG[`servizio_${n}_nome`]||`Servizio ${n}`,body);
-      }).join(''):'');
-}
-function buildGalleria(keys){
-  const main=keys.filter(k=>k.startsWith('galleria_')&&!k.startsWith('galleria_estesa_'));
-  const fNums=[...new Set(keys.filter(k=>/^foto_\d+_/.test(k)).map(k=>k.match(/^foto_(\d+)_/)[1]))].sort((a,b)=>+a-+b);
-  const estTop=keys.filter(k=>k.startsWith('galleria_estesa_'));
-  const estNums=[...new Set(keys.filter(k=>/^foto_estesa_\d+_/.test(k)).map(k=>k.match(/^foto_estesa_(\d+)_/)[1]))].sort((a,b)=>+a-+b);
-  return sHdr('🖼️','Galleria','Gestione foto')
-    +main.map(k=>rf(k,CFG[k])).join('')
-    +(fNums.length?`<div class="divider"></div><div class="sub-label">Foto galleria principale</div>`
-      +fNums.map(n=>{
-        const atk=`foto_${n}_attiva`;
-        const body=keys.filter(k=>k.startsWith(`foto_${n}_`)&&k!==atk).map(k=>rf(k,CFG[k])).join('');
-        return makeCard(`card_foto_${n}`,atk,CFG[`foto_${n}_didascalia`]||`Foto ${n}`,body);
-      }).join(''):'')
-    +(estTop.length||estNums.length?`<div class="divider"></div>`
-      +estTop.map(k=>rf(k,CFG[k])).join('')
-      +(estNums.length?`<div class="sub-label">Foto galleria estesa</div>`
-        +estNums.map(n=>{
-          const atk=`foto_estesa_${n}_attiva`;
-          const body=keys.filter(k=>k.startsWith(`foto_estesa_${n}_`)&&k!==atk).map(k=>rf(k,CFG[k])).join('');
-          return makeCard(`card_est_${n}`,atk,`Foto estesa ${n}`,body);
-        }).join(''):''):'');
-}
-function buildRecensioni(keys){
-  const top=keys.filter(k=>k.startsWith('recensioni_'));
-  const nums=[...new Set(keys.filter(k=>/^recensione_\d+_/.test(k)).map(k=>k.match(/^recensione_(\d+)_/)[1]))].sort((a,b)=>+a-+b);
-  return sHdr('⭐','Recensioni','Testimonianze')
-    +top.map(k=>rf(k,CFG[k])).join('')
-    +nums.map(n=>{
-      const atk=`recensione_${n}_attiva`;
-      const body=keys.filter(k=>k.startsWith(`recensione_${n}_`)&&k!==atk).map(k=>rf(k,CFG[k])).join('');
-      return makeCard(`card_rec_${n}`,atk,CFG[`recensione_${n}_nome`]||`Recensione ${n}`,body);
-    }).join('');
-}
-function buildFaq(keys){
-  const nums=[...new Set(keys.filter(k=>/^faq_\d+_/.test(k)).map(k=>k.match(/^faq_(\d+)_/)[1]))].sort((a,b)=>+a-+b);
-  function faqCard(n){
-    const atk=`faq_${n}_attiva`;
-    const body=keys.filter(k=>k.startsWith(`faq_${n}_`)&&k!==atk).map(k=>rf(k,CFG[k])).join('');
-    return makeCard(`card_faq_${n}`,atk,CFG[`faq_${n}_domanda`]||`FAQ ${n}`,body);
+function isFieldDimmed(key) {
+  const checks = [
+    [/^servizio_(\d+)_(?!attivo)/, n => state.config[`servizio_${n}_attivo`]==='NO'],
+    [/^foto_estesa_(\d+)_(?!attiva)/, n => state.config[`foto_estesa_${n}_attiva`]==='NO'],
+    [/^foto_(\d+)_(?!attiva)/, n => state.config[`foto_${n}_attiva`]==='NO'],
+    [/^prima_dopo_(\d+)_(?!attiva)/, n => state.config[`prima_dopo_${n}_attiva`]==='NO'],
+    [/^recensione_(\d+)_(?!attiva)/, n => state.config[`recensione_${n}_attiva`]==='NO'],
+    [/^faq_(\d+)_(?!attiva)/, n => state.config[`faq_${n}_attiva`]==='NO'],
+    [/^vantaggio_(\d+)_(?!attivo)/, n => state.config[`vantaggio_${n}_attivo`]==='NO'],
+  ];
+  for (const [re, check] of checks) {
+    const m = key.match(re); if (m && check(m[1])) return true;
   }
-  const rest=nums.slice(4);
-  return sHdr('❓','FAQ','Domande frequenti')
-    +nums.slice(0,4).map(n=>faqCard(n)).join('')
-    +(rest.length?`<div class="faq-more" onclick="toggleFaqMore()"><span id="faq-more-icon">▼</span> Mostra altre FAQ (${rest.length})</div>
-      <div class="faq-extra" id="faq-extra">${rest.map(n=>faqCard(n)).join('')}</div>`:'');
-}
-function buildFooter(keys){return sHdr('📍','Footer & Contatti','Informazioni di contatto')+keys.map(k=>rf(k,CFG[k])).join('')}
-function buildExtra(keys){
-  return sHdr('🔧','Campi Extra','')
-    +`<div class="extra-notice">ℹ️ Questi campi sono specifici di questo template.</div>`
-    +keys.map(k=>rf(k,CFG[k])).join('');
+  return false;
 }
 
-function buildUI(){
-  const bySection={};
-  SECTIONS.forEach(s=>{bySection[s.id]=[]});
-  ORIG_KEYS.forEach(k=>{
-    if(isHiddenKey(k))return;
-    const s=secOf(k);
-    (bySection[s]||bySection.extra).push(k);
+/* ═══════════════════════════════════════
+   GROUPING
+═══════════════════════════════════════ */
+function groupForSection(sid, keys) {
+  const numericGroup = (prefix, attivKey) => {
+    const map = {};
+    keys.filter(k=>k.startsWith(prefix+'_')).forEach(k=>{
+      const m=k.match(new RegExp(`^${prefix}_(\\d+)_`)); if(m){if(!map[m[1]])map[m[1]]=[];map[m[1]].push(k);}
+    });
+    const main = keys.filter(k=>!k.match(new RegExp(`^${prefix}_\\d+_`)));
+    const groups = main.length?[{label:null,keys:main}]:[];
+    Object.keys(map).sort((a,b)=>+a-+b).forEach(n=>{
+      groups.push({label:`${prefix.charAt(0).toUpperCase()+prefix.slice(1).replace(/_/g,' ')} ${n}`,num:n,keys:map[n],attivKey:attivKey(n)});
+    });
+    return groups;
+  };
+
+  if (sid==='servizi') return numericGroup('servizio', n=>`servizio_${n}_attivo`);
+  if (sid==='galleria') {
+    const main = keys.filter(k=>k.startsWith('galleria_')&&!k.startsWith('galleria_estesa_'));
+    const extMain = keys.filter(k=>k.startsWith('galleria_estesa_'));
+    const photos={}, ext={};
+    keys.filter(k=>/^foto_\d+_/.test(k)).forEach(k=>{const m=k.match(/^foto_(\d+)_/);if(m){if(!photos[m[1]])photos[m[1]]=[];photos[m[1]].push(k);}});
+    keys.filter(k=>/^foto_estesa_\d+_/.test(k)).forEach(k=>{const m=k.match(/^foto_estesa_(\d+)_/);if(m){if(!ext[m[1]])ext[m[1]]=[];ext[m[1]].push(k);}});
+    const groups=[];
+    if(main.length) groups.push({label:null,keys:main});
+    if(Object.keys(photos).length) groups.push({label:'Foto Galleria',keys:Object.keys(photos).sort((a,b)=>+a-+b).flatMap(n=>photos[n])});
+    if(extMain.length) groups.push({label:'Galleria Estesa',keys:extMain});
+    if(Object.keys(ext).length) groups.push({label:'Foto Estese',keys:Object.keys(ext).sort((a,b)=>+a-+b).flatMap(n=>ext[n])});
+    return groups;
+  }
+  if (sid==='recensioni') return numericGroup('recensione', n=>`recensione_${n}_attiva`);
+  if (sid==='faq') return numericGroup('faq', n=>`faq_${n}_attiva`);
+  if (sid==='prima_dopo') return numericGroup('prima_dopo', n=>`prima_dopo_${n}_attiva`);
+  if (sid==='vantaggi') return numericGroup('vantaggio', n=>`vantaggio_${n}_attivo`);
+  if (sid==='chi_siamo') {
+    const main=keys.filter(k=>!k.includes('_passo_'));
+    const passos={};
+    keys.filter(k=>k.includes('_passo_')).forEach(k=>{const m=k.match(/passo_(\d+)_/);if(m){if(!passos[m[1]])passos[m[1]]=[];passos[m[1]].push(k);}});
+    const groups=[{label:null,keys:main}];
+    Object.keys(passos).sort().forEach(n=>groups.push({label:`Passo ${n}`,keys:passos[n]}));
+    return groups;
+  }
+  return [{label:null,keys}];
+}
+
+function renderSectionContent(sid, keys) {
+  const groups = groupForSection(sid, keys);
+  let html = '';
+  groups.forEach(g => {
+    if (!g.keys.length) return;
+    if (g.label) html += `<div class="subgroup-heading"><span class="subgroup-title">${esc(g.label)}</span></div>`;
+    let row = [];
+    const flush = () => {
+      if (!row.length) return;
+      html += `<div class="field-group${row.length===1?' single':''}">${row.map(k=>renderField(k,state.config[k])).join('')}</div>`;
+      row = [];
+    };
+    g.keys.forEach(k => {
+      const {type} = getFieldType(k, state.config[k]);
+      if (['TEXTAREA','IMG_PATH','COLOR','TOGGLE'].includes(type)) { flush(); html+=`<div class="field-group single">${renderField(k,state.config[k])}</div>`; }
+      else { row.push(k); if(row.length===2) flush(); }
+    });
+    flush();
+  });
+  return html;
+}
+
+/* ═══════════════════════════════════════
+   BUILD PANEL
+═══════════════════════════════════════ */
+function buildPanel() {
+  const grouped = {};
+  SECTIONS.forEach(s => grouped[s.id] = []);
+  state.configKeys.forEach(k => {
+    for (const s of SECTIONS) { if(s.id!=='extra'&&s.match(k)){grouped[s.id].push(k);return;} }
+    grouped['extra'].push(k);
   });
 
-  const nav=document.getElementById('sidebar-nav');
-  nav.innerHTML='';
-  SECTIONS.forEach(s=>{
-    if(!bySection[s.id]?.length)return;
-    let badge='';
-    if(s.id==='chi_siamo'&&CFG.chi_siamo_attivo!=='SI')badge=`<span class="nav-badge off">OFF</span>`;
-    const el=document.createElement('div');
-    el.className='nav-item';el.id='nav_'+s.id;
-    el.innerHTML=`<span class="nav-icon">${s.icon}</span><span class="nav-label">${s.label}</span>${badge}`;
-    el.onclick=()=>showSec(s.id);
-    nav.appendChild(el);
+  const activoMap = {chi_siamo:'chi_siamo_attivo',servizi:'servizi_attivi',galleria:'galleria_attiva',recensioni:'recensioni_attive',vantaggi:'vantaggi_attivi',prima_dopo:'prima_dopo_attiva'};
+
+  let sidebarHtml = '';
+  SECTIONS.forEach(s => {
+    if (!grouped[s.id].length) return;
+    const aktKey = activoMap[s.id];
+    const isActive = !aktKey || state.config[aktKey] !== 'NO';
+    sidebarHtml += `<div class="sidebar-item${isActive?'':' inactive-section'}" id="nav_${s.id}" onclick="scrollToSection('${s.id}')"><span class="icon">${s.icon}</span><span>${s.label}</span></div>`;
   });
+  document.getElementById('sidebar-nav').innerHTML = sidebarHtml;
 
-  const wrap=document.getElementById('sections-wrap');
-  wrap.innerHTML='';
-  const builders={impostazioni:buildImpostazioni,seo:buildSeo,navbar:buildNavbar,
-    promozioni:buildPromozioni,hero:buildHero,chi_siamo:buildChiSiamo,
-    servizi:buildServizi,galleria:buildGalleria,recensioni:buildRecensioni,
-    faq:buildFaq,footer:buildFooter,extra:buildExtra};
-  SECTIONS.forEach(s=>{
-    if(!bySection[s.id]?.length)return;
-    const div=document.createElement('div');
-    div.className='section-pane';div.id='sec_'+s.id;
-    div.innerHTML=(builders[s.id]||buildExtra)(bySection[s.id]);
-    wrap.appendChild(div);
+  let contentHtml = '';
+  SECTIONS.forEach(s => {
+    if (!grouped[s.id].length) return;
+    const aktKey = activoMap[s.id];
+    const isActive = !aktKey || state.config[aktKey] !== 'NO';
+    const statusHtml = aktKey ? `<span class="section-status ${isActive?'active':'inactive'}">${isActive?'Attivo':'Non attivo'}</span>` : '';
+    const open = isActive;
+    contentHtml += `
+      <div class="panel-section${isActive?'':' section-inactive'}" id="section_${s.id}">
+        <div class="section-header" onclick="toggleSection('${s.id}')">
+          <span class="section-icon">${s.icon}</span>
+          <span class="section-title">${s.label}</span>
+          ${statusHtml}
+          <span class="section-chevron${open?' open':''}" id="chev_${s.id}">▼</span>
+        </div>
+        <div class="section-body-wrapper${open?' open':''}" id="wrapper_${s.id}">
+          <div class="section-body-inner"><div class="section-body">${renderSectionContent(s.id, grouped[s.id])}</div></div>
+        </div>
+      </div>`;
   });
+  document.getElementById('content-area').innerHTML = contentHtml;
+  document.querySelectorAll('textarea').forEach(t => autoResize(t));
 
-  setTimeout(()=>{document.querySelectorAll('.fta').forEach(ta=>ar(ta))},80);
-  const first=SECTIONS.find(s=>bySection[s.id]?.length);
-  if(first)showSec(first.id);
-  document.getElementById('site-name').textContent=CFG.navbar_logo_testo||CFG.seo_titolo||'Sito';
-}
-
-// ════════════════════════════════════════════════════════════
-// NAV
-// ════════════════════════════════════════════════════════════
-function showSec(id){
-  document.querySelectorAll('.section-pane').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('sec_'+id)?.classList.add('active');
-  document.getElementById('nav_'+id)?.classList.add('active');
-  document.getElementById('main-content').scrollTop=0;
-  if(window.innerWidth<=768)closeSidebar();
-}
-function toggleCard(id){document.getElementById(id)?.classList.toggle('open')}
-function toggleFaqMore(){
-  const e=document.getElementById('faq-extra'),i=document.getElementById('faq-more-icon');
-  if(!e)return; const open=e.classList.toggle('open'); if(i)i.textContent=open?'▲':'▼';
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting){const id=e.target.id.replace('section_','');document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));document.getElementById(`nav_${id}`)?.classList.add('active');}});
+  }, {threshold:.2, rootMargin:`-${parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h'))+20}px 0px -60% 0px`});
+  SECTIONS.forEach(s => { const el=document.getElementById(`section_${s.id}`); if(el) obs.observe(el); });
 }
 
-// ════════════════════════════════════════════════════════════
-// FIELD UPDATES
-// ════════════════════════════════════════════════════════════
-function setField(key,val){CFG[key]=val;IS_DIRTY=true}
-
-function togField(key){
-  const v=CFG[key]==='SI'?'NO':'SI'; CFG[key]=v; IS_DIRTY=true;
-  document.getElementById('tt_'+key)?.classList.toggle('on',v==='SI');
-  const tv=document.getElementById('tv_'+key);
-  if(tv){tv.textContent=v;tv.classList.toggle('on',v==='SI')}
-  const inp=document.getElementById('f_'+key); if(inp)inp.value=v;
+function toggleSection(id) {
+  const w=document.getElementById(`wrapper_${id}`), c=document.getElementById(`chev_${id}`);
+  const open=w.classList.contains('open');
+  w.classList.toggle('open',!open); c.classList.toggle('open',!open);
 }
 
-function updateCC(key){
-  const el=document.getElementById('f_'+key),cc=document.getElementById('cc_'+key);
-  const limit=maxLen(key);
-  if(el&&cc&&limit){const l=el.value.length;cc.textContent=`${l}/${limit}`;cc.classList.toggle('over',l>limit)}
+function scrollToSection(id) {
+  showConfigMode();
+  const el=document.getElementById(`section_${id}`);
+  if(!el) return;
+  document.getElementById(`wrapper_${id}`)?.classList.add('open');
+  document.getElementById(`chev_${id}`)?.classList.add('open');
+  setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById(`nav_${id}`)?.classList.add('active');
+  if(window.innerWidth<=768) closeSidebar();
 }
-function updDr(key){
-  const el=document.getElementById('f_'+key),dr=document.getElementById('dr_'+key);
-  if(el&&dr)dr.textContent=el.value?fmtDate(el.value):'';
-}
-function ar(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px'}
-function updThumb(key){
-  const inp=document.getElementById('f_'+key),th=document.getElementById('ithumb_'+key),ph=document.getElementById('iph_'+key);
-  if(!inp)return; const v=inp.value.trim();
-  if(th&&ph){if(v){th.src=v;th.style.display='';ph.style.display='none'}else{th.style.display='none';ph.style.display=''}}
-}
-function clrImg(key){const inp=document.getElementById('f_'+key);if(inp){inp.value='';setField(key,'');updThumb(key)}}
-function updFileLabel(key){
-  const inp=document.getElementById('f_'+key),label=document.getElementById('file_label_'+key);
-  if(!inp||!label)return;
-  const v=inp.value.trim();
-  label.textContent=v?v.split('/').pop():'Nessun PDF caricato';
-}
-function clrFile(key){const inp=document.getElementById('f_'+key);if(inp){inp.value='';setField(key,'');updFileLabel(key)}}
 
-// ════════════════════════════════════════════════════════════
-// VALIDATION
-// ════════════════════════════════════════════════════════════
-function validate(){
-  const errs=[];
-  if(!CFG.seo_titolo?.trim())errs.push({k:'seo_titolo',m:'Il titolo SEO non può essere vuoto.'});
-  if(!CFG.footer_nome?.trim())errs.push({k:'footer_nome',m:'Il nome nel footer non può essere vuoto.'});
-  if(!CFG.footer_whatsapp?.trim()&&!CFG.footer_telefono?.trim())
-    errs.push({k:'footer_whatsapp',m:'Inserisci almeno WhatsApp o Telefono nel footer.'});
-  ORIG_KEYS.forEach(k=>{
-    if(isHiddenKey(k))return;
-    const limit=maxLen(k);
-    if(limit&&String(CFG[k]||'').length>limit){
-      errs.push({k,m:`"${lbl(k)}" supera il limite di ${limit} caratteri.`});
+function showConfigMode() {
+  state.guidaMode = false;
+  document.getElementById('content-area').style.display = '';
+  document.getElementById('guida-area').style.display = 'none';
+  document.getElementById('save-btn').style.display = '';
+  document.getElementById('nav-guida').classList.remove('active');
+}
+
+/* ═══════════════════════════════════════
+   GUIDA SECTION
+═══════════════════════════════════════ */
+async function showGuida() {
+  state.guidaMode = true;
+  document.getElementById('content-area').style.display = 'none';
+  document.getElementById('guida-area').style.display = 'block';
+  document.getElementById('save-btn').style.display = 'none';
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('nav-guida').classList.add('active');
+  if(window.innerWidth<=768) closeSidebar();
+
+  const ta = document.getElementById('guida-textarea');
+  const status = document.getElementById('guida-status');
+
+  if (ta.dataset.loaded === '1') return;
+  status.textContent = '⏳ Caricamento guida...';
+  document.getElementById('btn-guida-save').disabled = true;
+
+  try {
+    const res = await githubRequest(`/repos/${state.repo}/contents/guida.md`);
+    if (res.status === 404) {
+      ta.value = '';
+      ta.placeholder = 'La guida non esiste ancora. Scrivi qui il testo e clicca Salva per crearla.';
+      status.textContent = '(file non trovato — verrà creato al salvataggio)';
+    } else if (res.ok) {
+      const data = await res.json();
+      state.guidaSha = data.sha;
+      ta.value = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+      status.textContent = `Ultimo aggiornamento: ${new Date(data.last_modified||Date.now()).toLocaleString('it')||'—'}`;
+      ta.dataset.loaded = '1';
+    } else {
+      throw new Error(`HTTP ${res.status}`);
     }
+  } catch(e) {
+    status.textContent = `❌ Errore: ${e.message}`;
+  }
+  document.getElementById('btn-guida-save').disabled = false;
+  autoResize(ta);
+}
+
+async function saveGuida() {
+  const ta = document.getElementById('guida-textarea');
+  const status = document.getElementById('guida-status');
+  const btn = document.getElementById('btn-guida-save');
+  btn.disabled = true;
+  btn.textContent = '⏳ Salvataggio...';
+
+  try {
+    const content = btoa(unescape(encodeURIComponent(ta.value)));
+    const body = { message: 'Ompage: aggiornamento guida.md', content };
+    if (state.guidaSha) body.sha = state.guidaSha;
+
+    const res = await fetch(`https://api.github.com/repos/${state.repo}/contents/guida.md`, {
+      method:'PUT',
+      headers:{'Authorization':`token ${state.token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify(body)
+    });
+    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.message||`HTTP ${res.status}`); }
+    const data = await res.json();
+    state.guidaSha = data.content.sha;
+    ta.dataset.loaded = '1';
+    status.textContent = `✅ Salvata — ${new Date().toLocaleTimeString('it')}`;
+  } catch(e) {
+    status.textContent = `❌ Errore: ${e.message}`;
+  }
+  btn.disabled = false;
+  btn.textContent = '💾 Salva guida';
+}
+
+/* ═══════════════════════════════════════
+   CHAT
+═══════════════════════════════════════ */
+function toggleChat() {
+  state.chatOpen = !state.chatOpen;
+  document.getElementById('chat-panel').classList.toggle('open', state.chatOpen);
+}
+
+function chatKeydown(e) {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResizeChat(el) {
+  el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+
+async function sendMessage() {
+  if (!state.workerUrl) {
+    renderBotMsg('Per usare l\'assistente configura prima il Worker URL nelle impostazioni.', 'error');
+    return;
+  }
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  input.value = '';
+  autoResizeChat(input);
+  document.getElementById('chat-send').disabled = true;
+  document.getElementById('chat-welcome')?.remove();
+
+  appendMsg(msg, 'user');
+
+  const loadingEl = appendMsg('…', 'bot loading');
+
+  try {
+    const res = await fetch(state.workerUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ message:msg, history:state.chatHistory.slice(-10) })
+    });
+    const data = await res.json();
+    loadingEl.remove();
+    if (data.error) throw new Error(data.error);
+
+    state.chatHistory.push({role:'user',content:msg});
+    state.chatHistory.push({role:'assistant',content:data.reply});
+
+    renderBotMsg(data.reply);
+  } catch(e) {
+    loadingEl.remove();
+    renderBotMsg(`❌ Errore: ${e.message}`, 'error');
+  }
+  document.getElementById('chat-send').disabled = false;
+  input.focus();
+}
+
+function appendMsg(text, cls) {
+  const el = document.createElement('div');
+  el.className = `chat-msg ${cls}`;
+  el.textContent = text;
+  const msgs = document.getElementById('chat-messages');
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+  return el;
+}
+
+function renderBotMsg(text, extra='') {
+  const el = document.createElement('div');
+  el.className = `chat-msg bot ${extra}`;
+  // Simple markdown: **bold**, `code`, newlines
+  el.innerHTML = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+  el.innerHTML = `<p>${el.innerHTML}</p>`;
+  const msgs = document.getElementById('chat-messages');
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+  return el;
+}
+
+/* ═══════════════════════════════════════
+   TOGGLE HELPERS
+═══════════════════════════════════════ */
+function onToggleChange(key, el) {
+  const wrap = el.closest('.toggle-wrap');
+  if (wrap) { const lbl=wrap.querySelector('.toggle-label-text'); if(lbl) lbl.textContent=el.checked?'Attivo (SI)':'Non attivo (NO)'; }
+
+  const sectionMap = {chi_siamo_attivo:'chi_siamo',servizi_attivi:'servizi',galleria_attiva:'galleria',recensioni_attive:'recensioni',vantaggi_attivi:'vantaggi',prima_dopo_attiva:'prima_dopo'};
+  if (sectionMap[key]) {
+    const sid=sectionMap[key];
+    document.getElementById(`nav_${sid}`)?.classList.toggle('inactive-section',!el.checked);
+    document.getElementById(`section_${sid}`)?.classList.toggle('section-inactive',!el.checked);
+    const st=document.getElementById(`section_${sid}`)?.querySelector('.section-status');
+    if(st){st.className=`section-status ${el.checked?'active':'inactive'}`;st.textContent=el.checked?'Attivo':'Non attivo';}
+    return;
+  }
+
+  const dimGroups = [
+    [/^servizio_(\d+)_attivo$/, n=>`servizio_${n}_`],
+    [/^foto_(\d+)_attiva$/, n=>`foto_${n}_`],
+    [/^foto_estesa_(\d+)_attiva$/, n=>`foto_estesa_${n}_`],
+    [/^prima_dopo_(\d+)_attiva$/, n=>`prima_dopo_${n}_`],
+    [/^recensione_(\d+)_attiva$/, n=>`recensione_${n}_`],
+    [/^faq_(\d+)_attiva$/, n=>`faq_${n}_`],
+    [/^vantaggio_(\d+)_attivo$/, n=>`vantaggio_${n}_`],
+  ];
+  for (const [re, pfn] of dimGroups) {
+    const m=key.match(re);
+    if(m){
+      document.querySelectorAll(`[data-key^="${pfn(m[1])}"]`).forEach(fe=>{
+        const fw=fe.closest('.field');
+        if(fw&&fe.dataset.key!==key) fw.classList.toggle('dimmed',!el.checked);
+      });
+      break;
+    }
+  }
+}
+
+function syncColorHex(key, value) { const h=document.getElementById(`field_${key}`); if(h) h.value=value.toUpperCase(); markDirty(); }
+function syncColorPicker(key, value) { const clean=value.startsWith('#')?value:'#'+value; if(/^#[0-9A-Fa-f]{6}$/.test(clean)){const p=document.getElementById(`field_${key}_picker`);if(p) p.value=clean;} markDirty(); }
+function autoResize(el) { el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
+
+/* ═══════════════════════════════════════
+   IMAGES
+═══════════════════════════════════════ */
+function rawUrl(path) {
+  if(!path) return ''; if(path.startsWith('http')) return path;
+  const [owner,repo]=state.repo.split('/');
+  return `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${path}`;
+}
+function updateThumb(key) {
+  const input=document.getElementById(`field_${key}`),thumb=document.getElementById(`thumb_${key}`),ph=document.getElementById(`thumb_ph_${key}`);
+  if(!input) return; const val=input.value.trim();
+  if(val){if(thumb){thumb.src=rawUrl(val);thumb.style.display='block';if(ph) ph.style.display='none';}}
+  else{if(thumb) thumb.style.display='none';if(ph) ph.style.display='flex';}
+}
+function triggerUpload(key){ document.getElementById(`file_${key}`)?.click(); }
+async function handleUpload(key, fileInput) {
+  const file=fileInput.files[0]; if(!file) return;
+  const prog=document.getElementById(`prog_${key}`);
+  if(prog){prog.style.display='block';prog.textContent='⏳ Caricamento...';}
+  try {
+    const base64=await fileToBase64(file);
+    const filename=`assets/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const res=await githubRequest(`PUT /repos/${state.repo}/contents/${filename}`,{message:`Upload: ${filename}`,content:base64});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||'Errore upload');}
+    const input=document.getElementById(`field_${key}`);
+    if(input){input.value=filename;updateThumb(key);markDirty();}
+    if(prog) prog.textContent='✅ Caricata!';
+    setTimeout(()=>{if(prog) prog.style.display='none';},3000);
+  } catch(e){ if(prog){prog.style.color='var(--error)';prog.textContent='❌ '+e.message;} setTimeout(()=>{if(prog) prog.style.display='none';},5000); }
+  fileInput.value='';
+}
+function fileToBase64(file){ return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('Lettura fallita'));r.readAsDataURL(file);}); }
+
+/* ═══════════════════════════════════════
+   GITHUB API
+═══════════════════════════════════════ */
+function githubRequest(path, body=null) {
+  let url, method, opts;
+  if(path.startsWith('PUT ')) { url=`https://api.github.com${path.slice(4)}`; method='PUT'; }
+  else { url=`https://api.github.com${path}`; method=body?'PUT':'GET'; }
+  opts={method,headers:{'Authorization':`token ${state.token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'}};
+  if(body) opts.body=JSON.stringify(body);
+  return fetch(url,opts);
+}
+
+async function loadConfig() {
+  const res=await githubRequest(`/repos/${state.repo}/contents/config.json`);
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||`HTTP ${res.status}`);}
+  const data=await res.json();
+  state.sha=data.sha;
+  const json=JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+  state.config=json; state.configKeys=Object.keys(json);
+}
+
+/* ═══════════════════════════════════════
+   SERIALIZE + VALIDATE
+═══════════════════════════════════════ */
+function serializeForm() {
+  const result={};
+  state.configKeys.forEach(key=>{
+    const el=document.getElementById(`field_${key}`);
+    if(!el){result[key]=state.config[key];return;}
+    const t=el.dataset.type;
+    if(t==='TOGGLE') result[key]=el.checked?'SI':'NO';
+    else if(t==='COLOR'){let v=el.value.trim().toUpperCase();if(v&&!v.startsWith('#'))v='#'+v;result[key]=v;}
+    else result[key]=el.value;
   });
-  if(errs.length){
-    flash('⚠️ '+errs[0].m,'warning');
-    showSec(secOf(errs[0].k));
-    setTimeout(()=>document.getElementById('f_'+errs[0].k)?.scrollIntoView({behavior:'smooth',block:'center'}),200);
-    return false;
-  }
-  return true;
+  return result;
 }
 
-function syncDerivedFields(){
-  if('schema_nome' in CFG) {
-    CFG.schema_nome = CFG.footer_nome || CFG.navbar_logo_testo || CFG.schema_nome || '';
+const REQUIRED=['seo_titolo','footer_nome'];
+function validateForm() {
+  REQUIRED.forEach(k=>document.getElementById(`fieldwrap_${k}`)?.classList.remove('has-error'));
+  const data=serializeForm(); let valid=true, first=null;
+  REQUIRED.forEach(k=>{ if(!data[k]?.trim()){const w=document.getElementById(`fieldwrap_${k}`);if(w){w.classList.add('has-error');const e=document.getElementById(`err_${k}`);if(e) e.textContent='Campo obbligatorio';if(!first) first=w;valid=false;}}});
+  if(!data['footer_whatsapp']?.trim()&&!data['footer_telefono']?.trim()){
+    ['footer_whatsapp','footer_telefono'].forEach(k=>{const w=document.getElementById(`fieldwrap_${k}`);if(w){w.classList.add('has-error');const e=document.getElementById(`err_${k}`);if(e) e.textContent='Inserire almeno un contatto';if(!first) first=w;}});
+    valid=false;
   }
-  if('schema_indirizzo' in CFG) {
-    CFG.schema_indirizzo = CFG.footer_indirizzo || CFG.schema_indirizzo || '';
-  }
-  if('schema_telefono' in CFG) {
-    CFG.schema_telefono = CFG.footer_telefono || CFG.footer_whatsapp || CFG.schema_telefono || '';
-  }
-  if('schema_orari' in CFG) {
-    CFG.schema_orari = CFG.footer_orari || CFG.schema_orari || '';
+  if(first){const s=first.closest('.panel-section');if(s){const id=s.id.replace('section_','');document.getElementById(`wrapper_${id}`)?.classList.add('open');document.getElementById(`chev_${id}`)?.classList.add('open');}
+    setTimeout(()=>first.scrollIntoView({behavior:'smooth',block:'center'}),100);}
+  return valid;
+}
+
+/* ═══════════════════════════════════════
+   SAVE
+═══════════════════════════════════════ */
+async function handleSave() {
+  if(!validateForm()){showBanner('error','❌ Completa i campi obbligatori prima di salvare.');return;}
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true; btn.textContent='⏳ Salvataggio...';
+  try {
+    const newCfg=serializeForm();
+    const b64=btoa(unescape(encodeURIComponent(JSON.stringify(newCfg,null,2))));
+    const res=await fetch(`https://api.github.com/repos/${state.repo}/contents/config.json`,{method:'PUT',headers:{'Authorization':`token ${state.token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify({message:'Ompage: aggiornamento config.json',content:b64,sha:state.sha})});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||`HTTP ${res.status}`);}
+    const data=await res.json(); state.sha=data.content.sha; state.config=newCfg; state.dirty=false;
+    try{localStorage.removeItem('ompage_autosave');}catch(_){}
+    document.getElementById('unsaved-dot').classList.remove('visible');
+    showBanner('success','✅ Salvato! Il sito si aggiornerà entro 60 secondi.');
+  } catch(e){ showBanner('error',`❌ ${e.message} — <a href="https://github.com/${state.repo}" target="_blank">Apri repo</a>`); }
+  btn.disabled=false; btn.textContent='💾 Salva e Pubblica';
+}
+
+/* ═══════════════════════════════════════
+   BANNER + DIRTY + AUTOSAVE
+═══════════════════════════════════════ */
+function showBanner(type, html) {
+  const b=document.getElementById('banner'); b.className=`show ${type}`; b.innerHTML=html;
+  clearTimeout(state.bannerTimer); state.bannerTimer=setTimeout(()=>b.classList.remove('show'),6000);
+}
+function markDirty(){ if(!state.dirty){state.dirty=true;document.getElementById('unsaved-dot').classList.add('visible');} }
+
+function setupAutosave() {
+  clearInterval(state.autosaveTimer);
+  state.autosaveTimer=setInterval(()=>{
+    if(!state.dirty) return;
+    try{localStorage.setItem('ompage_autosave',JSON.stringify({repo:state.repo,data:serializeForm(),ts:Date.now()}));}catch(_){}
+  },30000);
+}
+
+/* ═══════════════════════════════════════
+   MISC
+═══════════════════════════════════════ */
+function openPreview(){ const [o,r]=state.repo.split('/'); window.open(`https://${o}.github.io/${r}/`,'_blank','noopener'); }
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('visible'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('visible'); }
+
+/* ═══════════════════════════════════════
+   CONNECT / DISCONNECT
+═══════════════════════════════════════ */
+async function handleConnect() {
+  const token=document.getElementById('inp-token').value.trim();
+  const repo=document.getElementById('inp-repo').value.trim();
+  const worker=document.getElementById('inp-worker').value.trim();
+  const errEl=document.getElementById('setup-error');
+  const btn=document.getElementById('btn-connect');
+  errEl.style.display='none';
+  if(!token||!repo){errEl.textContent='Compila Token e Repository.';errEl.style.display='block';return;}
+  if(!/^[^/]+\/[^/]+$/.test(repo)){errEl.textContent='Formato repo non valido. Usa: username/nome-repo';errEl.style.display='block';return;}
+  btn.disabled=true; btn.textContent='Verifica in corso...';
+  try {
+    const res=await fetch(`https://api.github.com/repos/${repo}`,{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||`Token non valido o repo non trovato (${res.status})`);}
+    localStorage.setItem('ompage_gh_token',token);
+    localStorage.setItem('ompage_gh_repo',repo);
+    if(worker) localStorage.setItem('ompage_worker_url',worker);
+    state.token=token; state.repo=repo; state.workerUrl=worker||WORKER_URL;
+    await initPanel();
+  } catch(e){
+    errEl.textContent=`❌ ${e.message}`; errEl.style.display='block';
+    btn.disabled=false; btn.textContent='Connetti e continua →';
   }
 }
 
-// ════════════════════════════════════════════════════════════
-// FIX URLs — imgpath non viene mai toccato
-// ════════════════════════════════════════════════════════════
-function fixUrlsTels(){
-  ORIG_KEYS.forEach(key=>{
-    const t=ftype(key);
-    if(t==='url'&&CFG[key]){
-      const v=CFG[key].trim();
-      if(v&&!v.startsWith('http')&&!v.startsWith('/')&&!v.startsWith('assets/')){
-        CFG[key]='https://'+v;
-        const inp=document.getElementById('f_'+key);if(inp)inp.value=CFG[key];
+function disconnect(){
+  if(!confirm('Sei sicuro? Le modifiche non salvate andranno perse.')) return;
+  ['ompage_gh_token','ompage_gh_repo','ompage_worker_url','ompage_autosave'].forEach(k=>{try{localStorage.removeItem(k);}catch(_){}});
+  clearInterval(state.autosaveTimer); location.reload();
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+async function initPanel() {
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('main-panel').style.display='block';
+  document.getElementById('save-btn').style.display='block';
+
+  const chatBtn = document.getElementById('chat-btn');
+  chatBtn.style.display='flex';
+  if (!state.workerUrl) {
+    chatBtn.classList.add('no-worker');
+    chatBtn.title='Configura il Worker URL nel setup per usare l\'assistente';
+    chatBtn.onclick=()=>alert('Per usare l\'assistente, disconnetti e riconfigura il pannello inserendo l\'URL del Cloudflare Worker.');
+  }
+
+  document.getElementById('content-area').innerHTML=`<div class="page-loading"><div class="spinner"></div><span>Caricamento config.json...</span></div>`;
+
+  try {
+    await loadConfig();
+
+    try {
+      const saved=localStorage.getItem('ompage_autosave');
+      if(saved){
+        const p=JSON.parse(saved);
+        if(p.repo===state.repo&&Date.now()-p.ts<86400000&&confirm(`Trovato autosalvataggio del ${new Date(p.ts).toLocaleString('it')}.\nVuoi ripristinarlo?`)){
+          Object.assign(state.config,p.data); state.dirty=true;
+        }
+        localStorage.removeItem('ompage_autosave');
       }
-    }
-    if(t==='tel'&&CFG[key])CFG[key]=CFG[key].replace(/[^\d+\s]/g,'');
-  });
+    }catch(_){}
+
+    buildPanel();
+    setupAutosave();
+    window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
+  } catch(e){
+    document.getElementById('content-area').innerHTML=`<div class="page-error"><h3>❌ Impossibile caricare config.json</h3><p>${esc(e.message)}</p><p style="margin-top:12px">Verifica che <code>config.json</code> esista nel repo <a href="https://github.com/${state.repo}" target="_blank">github.com/${state.repo}</a></p></div>`;
+  }
 }
 
-// ════════════════════════════════════════════════════════════
-// FLASH
-// ════════════════════════════════════════════════════════════
-let _ft;
-function flash(msg,type='success',dur=4000){
-  const b=document.getElementById('flash'),t=document.getElementById('flash-text');
-  b.className=`flash flash-${type}`;t.innerHTML=msg;b.style.display='flex';
-  clearTimeout(_ft);_ft=setTimeout(hideFlash,dur);
-}
-function hideFlash(){document.getElementById('flash').style.display='none'}
-
-// ════════════════════════════════════════════════════════════
-// MOBILE SIDEBAR
-// ════════════════════════════════════════════════════════════
-function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebar-overlay').classList.toggle('visible');
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
-}
-
-// ════════════════════════════════════════════════════════════
-// UTILS
-// ════════════════════════════════════════════════════════════
-function h(s){if(!s&&s!==0)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function ha(s){if(!s)return'';return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
-function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('it-IT',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}catch(e){return d}}
-
-window.addEventListener('beforeunload',e=>{if(IS_DIRTY){e.preventDefault();e.returnValue=''}});
-
-init();
+/* ═══════════════════════════════════════
+   BOOT
+═══════════════════════════════════════ */
+(function boot(){
+  try{
+    const token=localStorage.getItem('ompage_gh_token');
+    const repo=localStorage.getItem('ompage_gh_repo');
+    const worker=localStorage.getItem('ompage_worker_url');
+    if(token&&repo){ state.token=token; state.repo=repo; state.workerUrl=worker||WORKER_URL; initPanel(); }
+  }catch(_){}
+})();
 </script>
 </body>
 </html>
